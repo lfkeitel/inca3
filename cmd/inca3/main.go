@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lfkeitel/inca3/src/server"
 	"github.com/lfkeitel/inca3/src/utils"
+	"github.com/lfkeitel/verbose"
 )
 
 var (
@@ -35,12 +37,22 @@ func init() {
 func main() {
 	flag.Parse()
 
+	if verFlag {
+		displayVersionInfo()
+		return
+	}
+
 	if configFile == "" || !utils.FileExists(configFile) {
 		configFile = utils.FindConfigFile()
 	}
 	if configFile == "" {
 		fmt.Println("No configuration file found")
 		os.Exit(1)
+	}
+
+	if testConfig {
+		testMainConfig()
+		return
 	}
 
 	var err error
@@ -55,22 +67,40 @@ func main() {
 		os.Exit(1)
 	}
 
-	e.Log = utils.NewLogger(e.Config
-	e.Log.Debugf("Configuration loaded from %s", configFile)
-
+	e.Log = utils.NewLogger(e.Config)
+	e.Log.Infof("Configuration loaded from %s", configFile)
 
 	e.DB, err = utils.NewDatabaseAccessor(e.Config)
 	if err != nil {
 		e.Log.WithField("error", err).Fatal("Error loading database")
 	}
 	e.Log.WithFields(verbose.Fields{
-		"type":    e.Config.Database.Type,
-		"address": e.Config.Database.Address,
+		"path": e.Config.Database.Path,
 	}).Debug("Loaded database")
 
 	e.View, err = utils.NewViewer(e, "public/templates")
 	if err != nil {
 		e.Log.WithField("error", err).Fatal("Error loading frontend templates")
 	}
-	// Start server
+
+	server.NewServer(e, server.LoadRoutes(e)).Run()
+}
+
+func displayVersionInfo() {
+	fmt.Printf(`Inca3 - (C) 2016 University of Southern Indiana
+
+Version:     %s
+Built:       %s
+Compiled by: %s
+Go version:  %s
+`, version, buildTime, builder, goversion)
+}
+
+func testMainConfig() {
+	_, err := utils.NewConfig(configFile)
+	if err != nil {
+		fmt.Printf("Error loading configuration: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("Configuration looks good")
 }

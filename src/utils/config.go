@@ -92,5 +92,5 @@ func NewConfig(configFile string) (conf *Config, err error) {
 		return nil, err
 	}
 	con.sourceFile = configFile
-	return setSensibleDefaults(&con)
+	return &con, nil
 }

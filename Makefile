@@ -27,7 +27,7 @@ fmt:
 alltests: test lint vet
 
 test:
-	@go test -race $$(go list ./src/...)
+	@go test $$(go list ./src/...)
 
 coverage:
 	@go test -cover $$(go list ./src/...)

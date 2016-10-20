@@ -4,12 +4,7 @@
 
 package utils
 
-import (
-	"database/sql"
-
-	"github.com/lfkeitel/inca3/src/utils"
-	"github.com/lfkeitel/verbose"
-)
+import "github.com/lfkeitel/verbose"
 
 // EnvType is the runtime state of the application
 type EnvType string
@@ -27,7 +22,7 @@ const (
 // parts of the application.
 type Environment struct {
 	Config *Config
-	DB     sql.DB
+	DB     *DatabaseAccessor
 	Log    *verbose.Logger
 	Env    EnvType
 	View   *Views
@@ -38,9 +33,13 @@ func NewEnvironment(e EnvType) *Environment {
 	return &Environment{Env: e}
 }
 
+func (e *Environment) IsDev() bool {
+	return e.Env == EnvDev
+}
+
 // NewLogger will create a new logging object based in the given configuration.
-func NewLogger(c *utils.Config) *verbose.Logger {
+func NewLogger(c *Config) *verbose.Logger {
 	l := verbose.New("")
-	l.AddHandler("", verbose.NewStdoutHandler())
+	l.AddHandler("stdout", verbose.NewStdoutHandler(true))
 	return l
 }

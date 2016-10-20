@@ -22,13 +22,13 @@ type DatabaseAccessor struct {
 	Driver string
 }
 
-func NewDatabaseAccessor(config *Config) (*DatabaseAccessor, error) {
+func NewDatabaseAccessor(c *Config) (*DatabaseAccessor, error) {
 	d := &DatabaseAccessor{}
 	var err error
-	if err = os.MkdirAll(path.Dir(c.Database.Address), os.ModePerm); err != nil {
-		return fmt.Errorf("Failed to create directories: %v", err)
+	if err = os.MkdirAll(path.Dir(c.Database.Path), os.ModePerm); err != nil {
+		return nil, fmt.Errorf("Failed to create directories: %v", err)
 	}
-	d.DB, err = sql.Open("sqlite3", c.Database.Address)
+	d.DB, err = sql.Open("sqlite3", c.Database.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -81,18 +81,56 @@ func NewDatabaseAccessor(config *Config) (*DatabaseAccessor, error) {
 	return d, nil
 }
 
-func createDeviceTable(d *databaseAccessor) error {
-	return nil
+func createDeviceTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "device" (
+	    "id" TEXT PRIMARY KEY NOT NULL,
+	    "name" TEXT NOT NULL,
+		"address" TEXT NOT NULL,
+		"brand" TEXT NOT NULL,
+		"connection" TEXT NOT NULL
+	)`
+
+	_, err := d.DB.Exec(sql)
+	return err
 }
 
-func createTypeTable(d *databaseAccessor) error {
-	return nil
+func createTypeTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "type" (
+	    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+	    "name" TEXT NOT NULL,
+		"brand" TEXT NOT NULL,
+		"connection" TEXT NOT NULL,
+		"script" TEXT NOT NULL,
+		"args" TEXT NOT NULL
+	)`
+
+	_, err := d.DB.Exec(sql)
+	return err
 }
 
-func createConfigTable(d *databaseAccessor) error {
-	return nil
+func createConfigTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "config" (
+	    "id" TEXT PRIMARY KEY NOT NULL,
+	    "device" TEXT NOT NULL,
+		"created" TEXT NOT NULL,
+		"filename" TEXT NOT NULL,
+		"compressed" INT DEFAULT 0
+	)`
+
+	_, err := d.DB.Exec(sql)
+	return err
 }
 
-func createLogTable(d *databaseAccessor) error {
-	return nil
+func createLogTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "log" (
+	    "id" TEXT PRIMARY KEY NOT NULL,
+	    "level" TEXT NOT NULL,
+		"message" TEXT NOT NULL,
+		"created" TEXT NOT NULL,
+		"system" TEXT NOT NULL,
+		"data" TEXT NOT NULL
+	)`
+
+	_, err := d.DB.Exec(sql)
+	return err
 }
