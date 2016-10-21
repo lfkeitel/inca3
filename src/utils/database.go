@@ -112,7 +112,7 @@ func createConfigTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "config" (
 	    "id" TEXT PRIMARY KEY NOT NULL,
 	    "device" TEXT NOT NULL,
-		"created" TEXT NOT NULL,
+		"created" INTEGER NOT NULL,
 		"filename" TEXT NOT NULL,
 		"compressed" INT DEFAULT 0
 	)`
@@ -126,7 +126,7 @@ func createLogTable(d *DatabaseAccessor) error {
 	    "id" TEXT PRIMARY KEY NOT NULL,
 	    "level" TEXT NOT NULL,
 		"message" TEXT NOT NULL,
-		"created" TEXT NOT NULL,
+		"created" INTEGER NOT NULL,
 		"system" TEXT NOT NULL,
 		"data" TEXT NOT NULL
 	)`
