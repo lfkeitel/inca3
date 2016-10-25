@@ -22,9 +22,7 @@ func GetDeviceByID(e *utils.Environment, name string) (*Device, error) {
 	}
 
 	if len(devices) == 0 {
-		d := newDevice(e)
-		d.Name = name
-		return d, nil
+		return newDevice(e), nil
 	}
 	return devices[0], nil
 }

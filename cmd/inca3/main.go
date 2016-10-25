@@ -68,7 +68,9 @@ func main() {
 	}
 
 	e.Log = utils.NewLogger(e.Config)
-	e.Log.Infof("Configuration loaded from %s", configFile)
+	e.Log.WithFields(verbose.Fields{
+		"path": configFile,
+	}).Info("Loaded configuration")
 
 	e.DB, err = utils.NewDatabaseAccessor(e.Config)
 	if err != nil {

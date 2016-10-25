@@ -1,6 +1,11 @@
 package models
 
 import (
+	"compress/gzip"
+	"errors"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/lfkeitel/inca3/src/utils"
@@ -19,6 +24,17 @@ func newConfig(e *utils.Environment) *Config {
 
 func GetConfigsForDevice(e *utils.Environment, id string) ([]*Config, error) {
 	return doConfigQuery(e, `WHERE "device" = ? ORDER BY "created" DESC`, id)
+}
+
+func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
+	configs, err := doConfigQuery(e, `WHERE "id" = ?`, id)
+	if err != nil {
+		return nil, err
+	}
+	if len(configs) == 0 {
+		return newConfig(e), nil
+	}
+	return configs[0], nil
 }
 
 func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([]*Config, error) {
@@ -48,4 +64,30 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		results = append(results, c)
 	}
 	return results, nil
+}
+
+func (c *Config) GetText() ([]byte, error) {
+	filename := filepath.Join(c.e.Config.Configs.BaseDir, c.Filename)
+
+	if !utils.FileExists(filename) {
+		return nil, errors.New("Config file not found")
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	if !c.Compressed {
+		return ioutil.ReadAll(file)
+	}
+
+	// Uncompress file
+	reader, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	return ioutil.ReadAll(reader)
 }

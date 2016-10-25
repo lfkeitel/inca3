@@ -39,6 +39,9 @@ type Config struct {
 		TLSKeyFile          string
 		RedirectHTTPToHTTPS bool
 	}
+	Configs struct {
+		BaseDir string
+	}
 }
 
 // FindConfigFile will locate the a configuration file by looking at the following places

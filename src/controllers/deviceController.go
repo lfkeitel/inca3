@@ -19,25 +19,29 @@ func NewDevice(e *utils.Environment) *Device {
 func (d *Device) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("id")
 
-	// Show all devices
-	if name == "" {
-		devices, err := models.GetAllDevices(d.e)
-		if err != nil {
-			d.e.Log.WithField("error", err).Error("Couldn't get devices")
-			return
-		}
-
-		data := map[string]interface{}{
-			"devices": devices,
-		}
-		d.e.View.NewView("device-list", r).Render(w, data)
+	if name != "" {
+		d.showDeviceConfigList(w, r, name)
 		return
 	}
 
-	// Show a particular
-	device, err := models.GetDeviceByID(d.e, name)
+	// Show all devices
+	devices, err := models.GetAllDevices(d.e)
 	if err != nil {
 		d.e.Log.WithField("error", err).Error("Couldn't get devices")
+		return
+	}
+
+	data := map[string]interface{}{
+		"devices": devices,
+	}
+	d.e.View.NewView("device-list", r).Render(w, data)
+	return
+}
+
+func (d *Device) showDeviceConfigList(w http.ResponseWriter, r *http.Request, name string) {
+	device, err := models.GetDeviceByID(d.e, name)
+	if err != nil {
+		d.e.Log.WithField("error", err).Error("Couldn't get device")
 		return
 	}
 
@@ -60,6 +64,46 @@ func (d *Device) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter
 }
 
 func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// If config is empty, show a page with all the device's known configs
-	// If config is not empty, show the config
+	name := p.ByName("id")
+	configID := p.ByName("config")
+
+	if configID == "" {
+		d.showDeviceConfigList(w, r, name)
+		return
+	}
+
+	device, err := models.GetDeviceByID(d.e, name)
+	if err != nil {
+		d.e.Log.WithField("error", err).Error("Couldn't get device")
+		return
+	}
+
+	if device.ID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	config, err := models.GetConfigByID(d.e, configID)
+	if err != nil {
+		d.e.Log.WithField("error", err).Error("Couldn't get config")
+		return
+	}
+
+	if config.ID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	configText, err := config.GetText()
+	if err != nil {
+		d.e.Log.WithField("error", err).Error("Couldn't get config text")
+		return
+	}
+
+	data := map[string]interface{}{
+		"device":     device,
+		"config":     config,
+		"configText": string(configText),
+	}
+	d.e.View.NewView("config", r).Render(w, data)
 }

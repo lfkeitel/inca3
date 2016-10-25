@@ -38,7 +38,6 @@ func NewServer(e *utils.Environment, routes http.Handler) *Server {
 }
 
 func (s *Server) Run() {
-	s.e.Log.Info("Starting web server...")
 	if s.e.Config.Webserver.TLSCertFile == "" || s.e.Config.Webserver.TLSKeyFile == "" {
 		s.startHttp()
 		return
