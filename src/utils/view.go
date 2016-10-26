@@ -111,7 +111,7 @@ func (v *View) Render(w http.ResponseWriter, data map[string]interface{}) {
 	if data == nil {
 		data = make(map[string]interface{})
 	}
-	data["config"] = v.e.Config
+	data["e"] = v.e
 	if err := v.t.ExecuteTemplate(w, v.name, data); err != nil {
 		v.e.Log.WithFields(verbose.Fields{
 			"template": v.name,

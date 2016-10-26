@@ -1,33 +1,31 @@
 {{define "device-list"}}
     {{template "header"}}
 
+    <script type="text/x-template" id="device-list-template">
+        <div class="table-responsive">
+            <table class="device-list table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th v-for="key in tableCols">${key | capitalize}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="entry in tableData">
+                        <td v-for="key in tableCols" v-on:click="gotoDevice(entry['id'])">
+                            ${entry[key]}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </script>
+
     <div class="row clearfix">
-        <div class="col-md-12 column">
+        <div class="col-md-12 column" id="app">
             <h4>Device List:</h4>
-            <div class="table-responsive">
-                <table class="device-list table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>IP Address</th>
-                            <th>Protocol</th>
-                            <th>Brand</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {{range .devices}}
-                        <tr class="clickable-row" data-href="/devices/{{.ID}}">
-                            <td>{{.Name}}</td>
-                            <td>{{.Address}}</td>
-                            <td>{{.Connection}}</td>
-                            <td>{{.Brand}}</td>
-                        </tr>
-                    {{end}}
-                    </tbody>
-                </table>
-            </div>
+            <device-list :table-data="tableData" :table-cols="tableColumns"></device-list>
         </div>
     </div>
 
-    {{template "footer"}}
+    {{template "footer" dict "e" $.e}}
 {{end}}

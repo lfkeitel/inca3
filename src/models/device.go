@@ -3,8 +3,13 @@ package models
 import "github.com/lfkeitel/inca3/src/utils"
 
 type Device struct {
-	e                                    *utils.Environment
-	ID, Name, Address, Brand, Connection string
+	e          *utils.Environment
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Address    string   `json:"address"`
+	Brand      string   `json:"brand"`
+	Connection string   `json:"connection"`
+	Configs    []string `json:"configs"`
 }
 
 func newDevice(e *utils.Environment) *Device {
@@ -49,7 +54,28 @@ func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([
 		if err != nil {
 			continue
 		}
+		d.loadConfigs()
 		results = append(results, d)
 	}
 	return results, nil
+}
+
+func (d *Device) loadConfigs() error {
+	sql := `SELECT "id" FROM "config" WHERE "device" = ?`
+
+	rows, err := d.e.DB.Query(sql, d.ID)
+	if err != nil {
+		return err
+	}
+
+	d.Configs = make([]string, 0)
+	for rows.Next() {
+		var c string
+		err := rows.Scan(&c)
+		if err != nil {
+			continue
+		}
+		d.Configs = append(d.Configs, c)
+	}
+	return nil
 }

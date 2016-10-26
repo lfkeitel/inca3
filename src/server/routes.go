@@ -21,7 +21,7 @@ func LoadRoutes(e *utils.Environment) http.Handler {
 	m := controllers.NewManager(e)
 	r.GET("/manage/:object", m.Manage)
 
-	r.Handler("GET", "/api/*a", apiRoutes(e))
+	r.Handler("GET", "/api/*a", apiGETRoutes(e))
 	r.Handler("PUT", "/api/*a", apiRoutes(e))
 	r.Handler("POST", "/api/*a", apiRoutes(e))
 	r.Handler("DELETE", "/api/*a", apiRoutes(e))
@@ -36,6 +36,18 @@ func rootHandler(e *utils.Environment) http.Handler {
 
 func apiRoutes(e *utils.Environment) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("API not yet"))
+		w.Write([]byte(`"API not yet"`))
 	})
+}
+
+func apiGETRoutes(e *utils.Environment) http.Handler {
+	r := httprouter.New()
+
+	d := controllers.NewDevice(e)
+	r.GET("/api/devices", d.ApiGetDevices)
+	r.GET("/api/devices/:id", d.ApiGetDevices)
+	r.GET("/api/devices/:id/configs", d.ApiGetConfigs)
+	r.GET("/api/devices/:id/configs/:config", d.ApiGetConfigs)
+
+	return r
 }

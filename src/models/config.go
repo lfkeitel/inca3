@@ -12,10 +12,12 @@ import (
 )
 
 type Config struct {
-	e                    *utils.Environment
-	ID, Device, Filename string
-	Created              time.Time
-	Compressed           bool
+	e          *utils.Environment
+	ID         string    `json:"id"`
+	Device     string    `json:"device"`
+	Filename   string    `json:"filename"`
+	Created    time.Time `json:"created"`
+	Compressed bool      `json:"compressed"`
 }
 
 func newConfig(e *utils.Environment) *Config {
