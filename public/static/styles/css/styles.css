@@ -38,3 +38,7 @@ code {
 .clickable-row {
   cursor: pointer;
 }
+
+.edit-form {
+  margin-top: 8px;
+}

@@ -46,8 +46,11 @@ func apiGETRoutes(e *utils.Environment) http.Handler {
 	d := controllers.NewDevice(e)
 	r.GET("/api/devices", d.ApiGetDevices)
 	r.GET("/api/devices/:id", d.ApiGetDevices)
-	r.GET("/api/devices/:id/configs", d.ApiGetConfigs)
-	r.GET("/api/devices/:id/configs/:config", d.ApiGetConfigs)
+
+	c := controllers.NewConfig(e)
+	r.GET("/api/devices/:id/configs", c.ApiGetDeviceConfigs)
+	r.GET("/api/devices/:id/configs/:config", c.ApiGetDeviceConfigs)
+	r.GET("/api/configs/:config", c.ApiGetConfig)
 
 	return r
 }

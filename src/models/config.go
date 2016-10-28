@@ -2,6 +2,7 @@ package models
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -15,13 +16,19 @@ type Config struct {
 	e          *utils.Environment
 	ID         string    `json:"id"`
 	Device     string    `json:"device"`
-	Filename   string    `json:"filename"`
+	Filename   string    `json:"-"`
 	Created    time.Time `json:"created"`
 	Compressed bool      `json:"compressed"`
+	Size       int64     `json:"size"`
+	Text       string    `json:"body"`
 }
 
 func newConfig(e *utils.Environment) *Config {
 	return &Config{e: e}
+}
+
+func GetAllConfigs(e *utils.Environment) ([]*Config, error) {
+	return doConfigQuery(e, "", nil)
 }
 
 func GetConfigsForDevice(e *utils.Environment, id string) ([]*Config, error) {
@@ -62,13 +69,45 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		if err != nil {
 			continue
 		}
+
+		f := filepath.Join(e.Config.Configs.BaseDir, c.Filename)
+		if !utils.FileExists(f) {
+			continue
+		}
+
+		fileInto, err := os.Stat(f)
+		if err != nil {
+			continue
+		}
+
+		c.Size = fileInto.Size()
 		c.Created = time.Unix(created, 0)
 		results = append(results, c)
 	}
 	return results, nil
 }
 
-func (c *Config) GetText() ([]byte, error) {
+func (c *Config) MarshalJSON() ([]byte, error) {
+	type Alias Config
+	return json.Marshal(&struct {
+		Created int64 `json:"created"`
+		*Alias
+	}{
+		Created: c.Created.Unix(),
+		Alias:   (*Alias)(c),
+	})
+}
+
+func (c *Config) LoadText() error {
+	t, err := c.getText()
+	if err != nil {
+		return err
+	}
+	c.Text = string(t)
+	return nil
+}
+
+func (c *Config) getText() ([]byte, error) {
 	filename := filepath.Join(c.e.Config.Configs.BaseDir, c.Filename)
 
 	if !utils.FileExists(filename) {

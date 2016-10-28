@@ -17,50 +17,17 @@ func NewDevice(e *utils.Environment) *Device {
 }
 
 func (d *Device) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	name := p.ByName("id")
-
-	if name != "" {
-		d.showDeviceConfigList(w, r, name)
+	if p.ByName("id") != "" {
+		d.showDeviceConfigList(w, r)
 		return
 	}
 
-	// Show all devices
-	devices, err := models.GetAllDevices(d.e)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get devices")
-		return
-	}
-
-	data := map[string]interface{}{
-		"devices": devices,
-	}
-	d.e.View.NewView("device-list", r).Render(w, data)
+	d.e.View.NewView("device-list", r).Render(w, nil)
 	return
 }
 
-func (d *Device) showDeviceConfigList(w http.ResponseWriter, r *http.Request, name string) {
-	device, err := models.GetDeviceByID(d.e, name)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get device")
-		return
-	}
-
-	if device.ID == "" {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	configs, err := models.GetConfigsForDevice(d.e, device.ID)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get configs")
-		return
-	}
-
-	data := map[string]interface{}{
-		"device":  device,
-		"configs": configs,
-	}
-	d.e.View.NewView("device", r).Render(w, data)
+func (d *Device) showDeviceConfigList(w http.ResponseWriter, r *http.Request) {
+	d.e.View.NewView("device", r).Render(w, nil)
 }
 
 func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -68,7 +35,7 @@ func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter
 	configID := p.ByName("config")
 
 	if configID == "" {
-		d.showDeviceConfigList(w, r, name)
+		d.showDeviceConfigList(w, r)
 		return
 	}
 
@@ -94,16 +61,14 @@ func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter
 		return
 	}
 
-	configText, err := config.GetText()
-	if err != nil {
+	if err := config.LoadText(); err != nil {
 		d.e.Log.WithField("error", err).Error("Couldn't get config text")
 		return
 	}
 
 	data := map[string]interface{}{
-		"device":     device,
-		"config":     config,
-		"configText": string(configText),
+		"device": device,
+		"config": config,
 	}
 	d.e.View.NewView("config", r).Render(w, data)
 }
@@ -133,51 +98,6 @@ func (d *Device) ApiGetDevices(w http.ResponseWriter, r *http.Request, p httprou
 	}
 
 	ret.Data = device
-	ret.WriteResponse(w, http.StatusOK)
-	return
-}
-
-func (d *Device) ApiGetConfigs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	name := p.ByName("id")
-	configID := p.ByName("config")
-
-	ret := utils.NewAPIResponse("", nil)
-	if name == "" {
-		ret.WriteResponse(w, http.StatusNotFound)
-		return
-	}
-
-	// Check device exists
-	device, err := models.GetDeviceByID(d.e, name)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get device")
-		return
-	}
-
-	if device.ID == "" {
-		ret.WriteResponse(w, http.StatusNotFound)
-		return
-	}
-
-	if configID == "" { // Return all configs
-		configs, err := models.GetConfigsForDevice(d.e, device.ID)
-		if err != nil {
-			d.e.Log.WithField("error", err).Error("Couldn't get configs")
-			return
-		}
-
-		ret.Data = configs
-		ret.WriteResponse(w, http.StatusOK)
-		return
-	}
-
-	config, err := models.GetConfigByID(d.e, configID)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get configs")
-		return
-	}
-
-	ret.Data = config
 	ret.WriteResponse(w, http.StatusOK)
 	return
 }
