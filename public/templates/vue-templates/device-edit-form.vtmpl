@@ -1,0 +1,33 @@
+{{define "vue-dev-edit-form"}}
+    <script type="text/x-template" id="edit-form-template">
+        <form class="edit-form">
+            <div class="form-group">
+                <label for="deviceName">Name</label>
+                <input type="text" class="form-control" id="deviceName" v-model="device.name">
+            </div>
+            <div class="form-group">
+                <label for="deviceAddr">Address</label>
+                <input type="text" class="form-control" id="deviceAddr" v-model="device.address">
+            </div>
+            <div class="form-group">
+                <label for="deviceBrand">Brand</label>
+                <input type="text" class="form-control" id="deviceBrand" v-model="device.brand">
+            </div>
+            <div class="form-group">
+                <label for="deviceConn">Connection</label>
+                <input type="text" class="form-control" id="deviceConn" v-model="device.connection">
+            </div>
+            {{if eq . "add"}}
+            <div class="form-group">
+                <button class="btn btn-success" v-on:click.prevent="saveDevice">Create</button>
+                <button class="btn btn-danger" v-on:click.prevent="cancel">Cancel</button>
+            </div>
+            {{else}}
+            <div class="form-group">
+                <button class="btn btn-success" v-on:click.prevent="saveDevice">Save Changes</button>
+                <button class="btn btn-danger" v-on:click.prevent="cancelEdit">Cancel</button>
+            </div>
+            {{end}}
+        </form>
+    </script>
+{{end}}

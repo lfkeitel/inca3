@@ -1,18 +1,7 @@
 {{define "manage-devices"}}
     {{template "header"}}
 
-    <script type="text/x-template" id="device-item-template">
-        <div class="panel panel-default">
-            <div class="panel-heading clickable-row" data-toggle="collapse" data-parent="#app" :href="itemHref">
-                    <span class="panel-title collapsed">${device.name}</span>
-            </div>
-            <div :id="itemID" class="panel-collapse collapse">
-                <div class="panel-body">
-                    ${device.address}
-                </div>
-            </div>
-        </div>
-    </script>
+    {{template "vue-manage-dev-list"}}
 
     <div class="row">
         <div class="col-md-12">

@@ -1,29 +1,21 @@
 {{define "device-list"}}
     {{template "header"}}
 
-    <script type="text/x-template" id="device-list-template">
-        <div class="table-responsive">
-            <table class="device-list table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th v-for="key in tableCols">${key | capitalize}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="entry in tableData" class="clickable-row">
-                        <td v-for="key in tableCols" v-on:click="gotoDevice(entry['id'])">
-                            ${entry[key]}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </script>
+    {{template "vue-device-list"}}
+    {{template "vue-dev-edit-form" "add"}}
 
     <div class="row clearfix">
         <div class="col-md-12 column" id="app">
             <h4>Device List:</h4>
-            <device-list :table-data="tableData" :table-cols="tableColumns"></device-list>
+            <div id="controls">
+                <button v-on:click="addDevice" class="btn btn-primary">Add</button>
+            </div>
+            <device-list
+                :table-data="tableData"
+                :table-cols="tableColumns"
+                v-if="section == 'devList'">
+            </device-list>
+            <device-edit-form v-if="section == 'deviceAdd'"></device-edit-form>
         </div>
     </div>
 

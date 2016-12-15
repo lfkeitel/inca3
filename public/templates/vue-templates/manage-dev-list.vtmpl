@@ -1,0 +1,14 @@
+{{define "vue-manage-dev-list"}}
+    <script type="text/x-template" id="device-item-template">
+        <div class="panel panel-default">
+            <div class="panel-heading clickable-row" data-toggle="collapse" data-parent="#app" :href="itemHref">
+                    <span class="panel-title collapsed">${device.name}</span>
+            </div>
+            <div :id="itemID" class="panel-collapse collapse">
+                <div class="panel-body">
+                    ${device.address}
+                </div>
+            </div>
+        </div>
+    </script>
+{{end}}

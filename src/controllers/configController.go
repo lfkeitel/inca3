@@ -61,7 +61,7 @@ func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprout
 }
 
 func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	name := p.ByName("id")
+	name := p.ByName("slug")
 	configID := p.ByName("config")
 
 	ret := utils.NewAPIResponse("", nil)
@@ -71,13 +71,13 @@ func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p h
 	}
 
 	// Check device exists
-	device, err := models.GetDeviceByID(c.e, name)
+	device, err := models.GetDeviceBySlug(c.e, name)
 	if err != nil {
 		c.e.Log.WithField("error", err).Error("Couldn't get device")
 		return
 	}
 
-	if device.ID == "" {
+	if device.ID == 0 {
 		ret.WriteResponse(w, http.StatusNotFound)
 		return
 	}

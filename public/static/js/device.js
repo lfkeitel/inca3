@@ -41,8 +41,16 @@
         methods: {
             saveDevice: function() {
                 console.log("Saving device");
-                changeState('');
+                var oldSlug = this.device.slug;
+                API.saveDevice(this.device, function(data) {
+                    if (data.data.slug !== oldSlug) {
+                        window.location = "/devices/" + data.data.slug;
+                        return;
+                    }
+                    changeState('');
+                });
             },
+
             cancelEdit: function() {
                 this.$emit('cancel-edit');
             }
@@ -57,13 +65,14 @@
             tableColumns: ["date", "name", "compressed", "size"],
             jsonKeys: ["created", "id", "compressed", "size"],
             tableData: [],
-            device: { "id": '' },
+            device: { "slug": '' },
             section: defaultSection
         },
         methods: {
             editDevice: function() {
                 changeState('edit', 'deviceEdit');
             },
+
             cancelEdit: function() {
                 this.device = getOriginalDeviceData();
                 changeState('');

@@ -83,7 +83,8 @@ func NewDatabaseAccessor(c *Config) (*DatabaseAccessor, error) {
 
 func createDeviceTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "device" (
-	    "id" TEXT PRIMARY KEY NOT NULL,
+	    "id" INTEGER PRIMARY KEY NOT NULL,
+		"slug" TEXT NOT NULL,
 	    "name" TEXT NOT NULL,
 		"address" TEXT NOT NULL,
 		"brand" TEXT NOT NULL,
@@ -111,7 +112,7 @@ func createTypeTable(d *DatabaseAccessor) error {
 func createConfigTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "config" (
 	    "id" TEXT PRIMARY KEY NOT NULL,
-	    "device" TEXT NOT NULL,
+	    "device" INTEGER NOT NULL,
 		"created" INTEGER NOT NULL,
 		"filename" TEXT NOT NULL,
 		"compressed" INT DEFAULT 0

@@ -1,10 +1,15 @@
 package models
 
-import "github.com/lfkeitel/inca3/src/utils"
+import (
+	"strings"
+
+	"github.com/lfkeitel/inca3/src/utils"
+)
 
 type Device struct {
 	e          *utils.Environment
-	ID         string   `json:"id"`
+	ID         int      `json:"id"`
+	Slug       string   `json:"slug"`
 	Name       string   `json:"name"`
 	Address    string   `json:"address"`
 	Brand      string   `json:"brand"`
@@ -20,8 +25,20 @@ func GetAllDevices(e *utils.Environment) ([]*Device, error) {
 	return doDeviceQuery(e, "", nil)
 }
 
-func GetDeviceByID(e *utils.Environment, name string) (*Device, error) {
-	devices, err := doDeviceQuery(e, `WHERE "id" = ?`, name)
+func GetDeviceByID(e *utils.Environment, id int) (*Device, error) {
+	devices, err := doDeviceQuery(e, `WHERE "id" = ?`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(devices) == 0 {
+		return newDevice(e), nil
+	}
+	return devices[0], nil
+}
+
+func GetDeviceBySlug(e *utils.Environment, name string) (*Device, error) {
+	devices, err := doDeviceQuery(e, `WHERE "slug" = ?`, name)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +50,7 @@ func GetDeviceByID(e *utils.Environment, name string) (*Device, error) {
 }
 
 func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([]*Device, error) {
-	sql := `SELECT "id", "name", "address", "brand", "connection" FROM "device" ` + where
+	sql := `SELECT "id", "slug", "name", "address", "brand", "connection" FROM "device" ` + where
 
 	rows, err := e.DB.Query(sql, values...)
 	if err != nil {
@@ -46,6 +63,7 @@ func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([
 		d := newDevice(e)
 		err := rows.Scan(
 			&d.ID,
+			&d.Slug,
 			&d.Name,
 			&d.Address,
 			&d.Brand,
@@ -58,6 +76,10 @@ func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([
 		results = append(results, d)
 	}
 	return results, nil
+}
+
+func (d *Device) SetEnv(e *utils.Environment) {
+	d.e = e
 }
 
 func (d *Device) loadConfigs() error {
@@ -78,4 +100,56 @@ func (d *Device) loadConfigs() error {
 		d.Configs = append(d.Configs, c)
 	}
 	return nil
+}
+
+func (d *Device) Save() error {
+	d.Slug = d.generateSlug(d.Name)
+
+	if d.ID == 0 {
+		return d.create()
+	}
+	return d.update()
+}
+
+func (d *Device) generateSlug(raw string) string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.Title(raw)
+	return strings.Replace(raw, " ", "", -1)
+}
+
+func (d *Device) create() error {
+	sql := `INSERT INTO "device" ("slug", "name", "address", "brand", "connection") VALUES (?, ?, ?, ?, ?)`
+
+	result, err := d.e.DB.Exec(
+		sql,
+		d.Slug,
+		d.Name,
+		d.Address,
+		d.Brand,
+		d.Connection,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, _ := result.LastInsertId()
+	d.ID = int(id)
+	return nil
+}
+
+func (d *Device) update() error {
+	sql := `UPDATE "device" SET "slug" = ?, "name" = ?, "address" = ?, "brand" = ?, "connection" = ? WHERE "id" = ?`
+
+	_, err := d.e.DB.Exec(
+		sql,
+		d.Slug,
+		d.Name,
+		d.Address,
+		d.Brand,
+		d.Connection,
+		d.ID,
+	)
+
+	return err
 }

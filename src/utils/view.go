@@ -59,7 +59,7 @@ func NewViewer(e *Environment, basepath string) (v *Views, err error) {
 	})
 
 	filepath.Walk(basepath, func(path string, info os.FileInfo, err1 error) error {
-		if strings.HasSuffix(path, ".tmpl") {
+		if strings.HasSuffix(path, "tmpl") {
 			if _, err := tmpl.ParseFiles(path); err != nil {
 				panic(err)
 			}

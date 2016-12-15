@@ -15,7 +15,7 @@ import (
 type Config struct {
 	e          *utils.Environment
 	ID         string    `json:"id"`
-	Device     string    `json:"device"`
+	DeviceID   int       `json:"deviceID"`
 	Filename   string    `json:"-"`
 	Created    time.Time `json:"created"`
 	Compressed bool      `json:"compressed"`
@@ -31,7 +31,7 @@ func GetAllConfigs(e *utils.Environment) ([]*Config, error) {
 	return doConfigQuery(e, "", nil)
 }
 
-func GetConfigsForDevice(e *utils.Environment, id string) ([]*Config, error) {
+func GetConfigsForDevice(e *utils.Environment, id int) ([]*Config, error) {
 	return doConfigQuery(e, `WHERE "device" = ? ORDER BY "created" DESC`, id)
 }
 
@@ -61,7 +61,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		var created int64
 		err := rows.Scan(
 			&c.ID,
-			&c.Device,
+			&c.DeviceID,
 			&created,
 			&c.Filename,
 			&c.Compressed,

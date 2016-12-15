@@ -1,0 +1,24 @@
+{{define "vue-config-list"}}
+    <script type="text/x-template" id="config-list-template">
+        <div class="table-responsive">
+            <table class="config-list table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th v-for="key in tableCols">${key | capitalize}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="entry in tableData" class="clickable-row">
+                        <td v-for="key in jsonKeys" v-on:click="gotoConfig(entry['id'])">
+                            <span v-if="key == 'created'">${entry[key] | formatDate}</span>
+                            <span v-else>
+                            <span v-if="key == 'size'">${entry[key] | formatFileSize}</span>
+                            <span v-else>${entry[key]}</span>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </script>
+{{end}}
