@@ -58,6 +58,11 @@ func NewDatabaseAccessor(c *Config) (*DatabaseAccessor, error) {
 		tables[tableName] = true
 	}
 
+	if _, ok := tables["setting"]; !ok {
+		if err := createSettingTable(d); err != nil {
+			return nil, err
+		}
+	}
 	if _, ok := tables["device"]; !ok {
 		if err := createDeviceTable(d); err != nil {
 			return nil, err
@@ -78,14 +83,19 @@ func NewDatabaseAccessor(c *Config) (*DatabaseAccessor, error) {
 			return nil, err
 		}
 	}
+	if _, ok := tables["job"]; !ok {
+		if err := createJobTable(d); err != nil {
+			return nil, err
+		}
+	}
 	return d, nil
 }
 
 func createDeviceTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "device" (
-	    "id" INTEGER PRIMARY KEY NOT NULL,
+		"id" INTEGER PRIMARY KEY NOT NULL,
 		"slug" TEXT NOT NULL,
-	    "name" TEXT NOT NULL,
+		"name" TEXT NOT NULL,
 		"address" TEXT NOT NULL,
 		"brand" TEXT NOT NULL,
 		"connection" TEXT NOT NULL
@@ -97,8 +107,8 @@ func createDeviceTable(d *DatabaseAccessor) error {
 
 func createTypeTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "type" (
-	    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	    "name" TEXT NOT NULL,
+		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+		"name" TEXT NOT NULL,
 		"brand" TEXT NOT NULL,
 		"connection" TEXT NOT NULL,
 		"script" TEXT NOT NULL,
@@ -111,8 +121,9 @@ func createTypeTable(d *DatabaseAccessor) error {
 
 func createConfigTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "config" (
-	    "id" TEXT PRIMARY KEY NOT NULL,
-	    "device" INTEGER NOT NULL,
+		"id" INTEGER PRIMARY KEY NOT NULL,
+		"slug" TEXT NOT NULL,
+		"device" INTEGER NOT NULL,
 		"created" INTEGER NOT NULL,
 		"filename" TEXT NOT NULL,
 		"compressed" INT DEFAULT 0
@@ -124,12 +135,42 @@ func createConfigTable(d *DatabaseAccessor) error {
 
 func createLogTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "log" (
-	    "id" TEXT PRIMARY KEY NOT NULL,
-	    "level" TEXT NOT NULL,
+		"id" INTEGER PRIMARY KEY NOT NULL,
+		"level" TEXT NOT NULL,
 		"message" TEXT NOT NULL,
 		"created" INTEGER NOT NULL,
 		"system" TEXT NOT NULL,
 		"data" TEXT NOT NULL
+	)`
+
+	_, err := d.DB.Exec(sql)
+	return err
+}
+
+func createSettingTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "setting" (
+		"key" TEXT UNIQUE NOT NULL,
+		"value" TEXT DEFAULT ('')
+	)`
+
+	if _, err := d.DB.Exec(sql); err != nil {
+		return err
+	}
+
+	sql = `INSERT INTO "setting" VALUES ("dbVersion", 0)`
+	_, err := d.DB.Exec(sql)
+	return err
+}
+
+func createJobTable(d *DatabaseAccessor) error {
+	sql := `CREATE TABLE "job" (
+		"id" INTEGER PRIMARY KEY NOT NULL,
+		"name" TEXT NOT NULL,
+		"status" TEXT default ('stopped'),
+		"devices" TEXT NOT NULL,
+		"error" TEXT NOT NULL default (''),
+		"start" INTEGER NOT NULL,
+		"end" INTEGER NOT NULL default (0)
 	)`
 
 	_, err := d.DB.Exec(sql)

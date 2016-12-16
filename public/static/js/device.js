@@ -63,7 +63,7 @@
         delimiters: delimiters,
         data: {
             tableColumns: ["date", "name", "compressed", "size"],
-            jsonKeys: ["created", "id", "compressed", "size"],
+            jsonKeys: ["created", "slug", "compressed", "size"],
             tableData: [],
             device: { "slug": '' },
             section: defaultSection

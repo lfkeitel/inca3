@@ -15,6 +15,7 @@ import (
 type Config struct {
 	e          *utils.Environment
 	ID         string    `json:"id"`
+	Slug       string    `json:"slug"`
 	DeviceID   int       `json:"deviceID"`
 	Filename   string    `json:"-"`
 	Created    time.Time `json:"created"`
@@ -35,6 +36,17 @@ func GetConfigsForDevice(e *utils.Environment, id int) ([]*Config, error) {
 	return doConfigQuery(e, `WHERE "device" = ? ORDER BY "created" DESC`, id)
 }
 
+func GetConfigBySlug(e *utils.Environment, slug string) (*Config, error) {
+	configs, err := doConfigQuery(e, `WHERE "slug" = ?`, slug)
+	if err != nil {
+		return nil, err
+	}
+	if len(configs) == 0 {
+		return newConfig(e), nil
+	}
+	return configs[0], nil
+}
+
 func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 	configs, err := doConfigQuery(e, `WHERE "id" = ?`, id)
 	if err != nil {
@@ -47,7 +59,7 @@ func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 }
 
 func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([]*Config, error) {
-	sql := `SELECT "id", "device", "created", "filename", "compressed" FROM "config" ` + where
+	sql := `SELECT "id", "slug", "device", "created", "filename", "compressed" FROM "config" ` + where
 
 	rows, err := e.DB.Query(sql, values...)
 	if err != nil {
@@ -61,6 +73,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		var created int64
 		err := rows.Scan(
 			&c.ID,
+			&c.Slug,
 			&c.DeviceID,
 			&created,
 			&c.Filename,

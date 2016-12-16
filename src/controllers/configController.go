@@ -17,10 +17,10 @@ func NewConfig(e *utils.Environment) *Config {
 }
 
 func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	name := p.ByName("config")
+	configSlug := p.ByName("config")
 
 	ret := utils.NewAPIResponse("", nil)
-	if name == "" { // Get all configs
+	if configSlug == "" { // Get all configs
 		configs, err := models.GetAllConfigs(c.e)
 		if err != nil {
 			ret.Message = "Error getting configs"
@@ -42,7 +42,7 @@ func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	// Get a single config
-	config, err := models.GetConfigByID(c.e, name)
+	config, err := models.GetConfigBySlug(c.e, configSlug)
 	if err != nil {
 		ret.Message = "Error getting config"
 		ret.WriteResponse(w, http.StatusInternalServerError)
@@ -62,7 +62,7 @@ func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprout
 
 func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("slug")
-	configID := p.ByName("config")
+	configSlug := p.ByName("config")
 
 	ret := utils.NewAPIResponse("", nil)
 	if name == "" {
@@ -82,7 +82,7 @@ func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p h
 		return
 	}
 
-	if configID == "" { // Return all configs
+	if configSlug == "" { // Return all configs
 		configs, err := models.GetConfigsForDevice(c.e, device.ID)
 		if err != nil {
 			c.e.Log.WithField("error", err).Error("Couldn't get configs")
@@ -94,7 +94,7 @@ func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p h
 		return
 	}
 
-	config, err := models.GetConfigByID(c.e, configID)
+	config, err := models.GetConfigBySlug(c.e, configSlug)
 	if err != nil {
 		c.e.Log.WithField("error", err).Error("Couldn't get configs")
 		return

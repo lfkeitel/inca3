@@ -33,9 +33,9 @@ func (d *Device) showDeviceConfigList(w http.ResponseWriter, r *http.Request) {
 
 func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("slug")
-	configID := p.ByName("config")
+	configSlug := p.ByName("config")
 
-	if configID == "" {
+	if configSlug == "" {
 		d.showDeviceConfigList(w, r)
 		return
 	}
@@ -51,7 +51,7 @@ func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter
 		return
 	}
 
-	config, err := models.GetConfigByID(d.e, configID)
+	config, err := models.GetConfigBySlug(d.e, configSlug)
 	if err != nil {
 		d.e.Log.WithField("error", err).Error("Couldn't get config")
 		return

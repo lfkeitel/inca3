@@ -9,7 +9,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="entry in tableData" class="clickable-row">
-                        <td v-for="key in jsonKeys" v-on:click="gotoConfig(entry['id'])">
+                        <td v-for="key in jsonKeys" v-on:click="gotoConfig(entry['slug'])">
                             <span v-if="key == 'created'">${entry[key] | formatDate}</span>
                             <span v-else>
                             <span v-if="key == 'size'">${entry[key] | formatFileSize}</span>
