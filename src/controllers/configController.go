@@ -8,15 +8,24 @@ import (
 	"github.com/lfkeitel/inca3/src/utils"
 )
 
-type Config struct {
+var configControllerSingle *ConfigController
+
+type ConfigController struct {
 	e *utils.Environment
 }
 
-func NewConfig(e *utils.Environment) *Config {
-	return &Config{e: e}
+func newConfigController(e *utils.Environment) *ConfigController {
+	return &ConfigController{e: e}
 }
 
-func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func GetConfigController(e *utils.Environment) *ConfigController {
+	if configControllerSingle == nil {
+		configControllerSingle = newConfigController(e)
+	}
+	return configControllerSingle
+}
+
+func (c *ConfigController) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	configSlug := p.ByName("config")
 
 	ret := utils.NewAPIResponse("", nil)
@@ -60,7 +69,7 @@ func (c *Config) ApiGetConfig(w http.ResponseWriter, r *http.Request, p httprout
 	return
 }
 
-func (c *Config) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (c *ConfigController) ApiGetDeviceConfigs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("slug")
 	configSlug := p.ByName("config")
 

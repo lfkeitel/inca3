@@ -9,15 +9,24 @@ import (
 	"github.com/lfkeitel/inca3/src/utils"
 )
 
-type Device struct {
+var deviceControllerSingle *DeviceController
+
+type DeviceController struct {
 	e *utils.Environment
 }
 
-func NewDevice(e *utils.Environment) *Device {
-	return &Device{e: e}
+func newDeviceController(e *utils.Environment) *DeviceController {
+	return &DeviceController{e: e}
 }
 
-func (d *Device) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func GetDeviceController(e *utils.Environment) *DeviceController {
+	if deviceControllerSingle == nil {
+		deviceControllerSingle = newDeviceController(e)
+	}
+	return deviceControllerSingle
+}
+
+func (d *DeviceController) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if p.ByName("slug") != "" {
 		d.showDeviceConfigList(w, r)
 		return
@@ -27,11 +36,11 @@ func (d *Device) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter
 	return
 }
 
-func (d *Device) showDeviceConfigList(w http.ResponseWriter, r *http.Request) {
+func (d *DeviceController) showDeviceConfigList(w http.ResponseWriter, r *http.Request) {
 	d.e.View.NewView("device", r).Render(w, nil)
 }
 
-func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("slug")
 	configSlug := p.ByName("config")
 
@@ -57,7 +66,7 @@ func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter
 		return
 	}
 
-	if config.ID == "" {
+	if config.ID == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -74,7 +83,7 @@ func (d *Device) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter
 	d.e.View.NewView("config", r).Render(w, data)
 }
 
-func (d *Device) ApiGetDevices(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (d *DeviceController) ApiGetDevices(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	name := p.ByName("slug")
 
 	ret := utils.NewAPIResponse("", nil)
@@ -103,7 +112,7 @@ func (d *Device) ApiGetDevices(w http.ResponseWriter, r *http.Request, p httprou
 	return
 }
 
-func (d *Device) ApiSaveDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (d *DeviceController) ApiSaveDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	decoder := json.NewDecoder(r.Body)
 
 	resp := utils.NewAPIResponse("", nil)
@@ -117,8 +126,32 @@ func (d *Device) ApiSaveDevice(w http.ResponseWriter, r *http.Request, p httprou
 	}
 	defer r.Body.Close()
 
-	if r.Method == "PUT" && device.Slug != p.ByName("slug") {
-		resp.Message = "Slug mismatch"
+	device.Type, err = models.GetTypeByID(d.e, device.Type.ID)
+	if err != nil {
+		resp.Message = "Unknown device type"
+		resp.WriteResponse(w, http.StatusBadRequest)
+		return
+	}
+
+	if r.Method == "PUT" {
+		if device.Slug != p.ByName("slug") {
+			resp.Message = "Slug mismatch"
+			resp.WriteResponse(w, http.StatusBadRequest)
+			return
+		}
+
+		if device.ID == 0 {
+			resp.Message = "No device ID given"
+			resp.WriteResponse(w, http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Technically, PUT doesn't need to send the entire object only changed
+	// data. But for now we require a full struct
+	if device.Address == "" ||
+		device.Name == "" {
+		resp.Message = "Missing data field"
 		resp.WriteResponse(w, http.StatusBadRequest)
 		return
 	}
@@ -136,4 +169,56 @@ func (d *Device) ApiSaveDevice(w http.ResponseWriter, r *http.Request, p httprou
 	resp.Message = "Device saved successfully"
 	resp.Data = device
 	resp.WriteResponse(w, http.StatusOK)
+}
+
+func (d *DeviceController) ApiDeleteDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	name := p.ByName("slug")
+
+	ret := utils.NewAPIResponse("", nil)
+	if name == "" {
+		ret.Message = "No device given"
+		ret.WriteResponse(w, http.StatusBadRequest)
+		return
+	}
+
+	device, err := models.GetDeviceBySlug(d.e, name)
+	if err != nil {
+		ret.Message = "Error getting device"
+		ret.WriteResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	if device.ID == 0 { // No device with that slug, return
+		ret.WriteResponse(w, http.StatusNoContent)
+		return
+	}
+
+	if err := device.Delete(); err != nil {
+		ret.Message = err.Error()
+		ret.WriteResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	configs, err := models.GetConfigsForDevice(d.e, device.ID)
+	if err != nil {
+		ret.Message = "Error deleting configs"
+		ret.WriteResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	finishedWithErrors := false
+	for _, config := range configs {
+		if err := config.Delete(); err != nil {
+			finishedWithErrors = true
+		}
+	}
+
+	if finishedWithErrors {
+		ret.Message = "Device deleted, but configurations were not"
+		ret.WriteResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	ret.WriteResponse(w, http.StatusNoContent)
+	return
 }

@@ -94,11 +94,10 @@ func NewDatabaseAccessor(c *Config) (*DatabaseAccessor, error) {
 func createDeviceTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "device" (
 		"id" INTEGER PRIMARY KEY NOT NULL,
-		"slug" TEXT NOT NULL,
+		"slug" TEXT NOT NULL UNIQUE,
 		"name" TEXT NOT NULL,
 		"address" TEXT NOT NULL,
-		"brand" TEXT NOT NULL,
-		"connection" TEXT NOT NULL
+		"type" INT NOT NULL DEFAULT (0)
 	)`
 
 	_, err := d.DB.Exec(sql)
@@ -166,11 +165,12 @@ func createJobTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "job" (
 		"id" INTEGER PRIMARY KEY NOT NULL,
 		"name" TEXT NOT NULL,
-		"status" TEXT default ('stopped'),
+		"status" TEXT DEFAULT ('stopped'),
+		"type" TEXT DEFAULT (''),
 		"devices" TEXT NOT NULL,
-		"error" TEXT NOT NULL default (''),
+		"error" TEXT NOT NULL DEFAULT (''),
 		"start" INTEGER NOT NULL,
-		"end" INTEGER NOT NULL default (0)
+		"end" INTEGER NOT NULL DEFAULT (0)
 	)`
 
 	_, err := d.DB.Exec(sql)

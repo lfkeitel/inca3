@@ -1,4 +1,14 @@
 (function(w) {
+    function makeRequest(method, url, data, ok, fail) {
+        $.ajax({
+            contentType: "application/json",
+            data: data,
+            dataType: "json",
+            method: method,
+            url: url
+        }).done(ok).fail(fail);
+    }
+
     var API = function() { };
 
     API.prototype.getAllDevices = function(ok, fail) {
@@ -18,6 +28,7 @@
     API.prototype.saveDevice = function(device, ok, fail) {
         // Make a copy of the object so we don't affect a vue data member
         var device = JSON.parse(JSON.stringify(device));
+        delete device.configs;
         if (device.id === 0) {
             this.createDevice(device, ok, fail);
         } else {
@@ -26,21 +37,31 @@
     }
 
     API.prototype.createDevice = function(device, ok, fail) {
-        delete device.configs;
         var json = JSON.stringify(device);
-        $.post("/api/devices", json, null, "json").done(ok).fail(fail);
+        makeRequest("POST", "/api/devices", json, ok, fail);
     }
 
     API.prototype.editDevice = function(device, ok, fail) {
-        delete device.configs;
         var json = JSON.stringify(device);
-        $.ajax({
-            contentType: "application/json",
-            data: json,
-            dataType: "json",
-            method: "PUT",
-            url: "/api/devices/" + device.slug
-        }).done(ok).fail(fail);
+        makeRequest("PUT", "/api/devices/" + device.slug, json, ok, fail);
+    }
+
+    API.prototype.deleteDevice = function(slug, ok, fail) {
+        slug = encodeURIComponent(slug);
+        makeRequest("DELETE", "/api/devices/" + slug, "", ok, fail);
+    }
+
+    API.prototype.getAllTypes = function(ok, fail) {
+        $.getJSON("/api/types").done(ok).fail(fail);
+    }
+
+    API.prototype.startJob = function(spec, ok, fail) {
+        var json = JSON.stringify(spec);
+        makeRequest("POST", "/api/job/start", json, ok, fail);
+    }
+
+    API.prototype.jobStatus = function(id, ok, fail) {
+        $.getJSON("/api/job/status/" + id).done(ok).fail(fail);
     }
 
     w.API = new API();

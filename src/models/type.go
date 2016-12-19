@@ -20,7 +20,7 @@ func GetAllTypes(e *utils.Environment) ([]*Type, error) {
 	return doTypeQuery(e, "", nil)
 }
 
-func GetTypeByID(e *utils.Environment, id string) (*Type, error) {
+func GetTypeByID(e *utils.Environment, id int) (*Type, error) {
 	types, err := doTypeQuery(e, `WHERE "id" = ?`, id)
 	if err != nil {
 		return nil, err
@@ -57,4 +57,47 @@ func doTypeQuery(e *utils.Environment, where string, values ...interface{}) ([]*
 		results = append(results, t)
 	}
 	return results, nil
+}
+
+func (t *Type) Save() error {
+	if t.ID == 0 {
+		return t.create()
+	}
+	return t.update()
+}
+
+func (t *Type) create() error {
+	sql := `INSERT INTO "type" ("name", "brand", "connection", "script", "args") VALUES (?,?,?,?,?)`
+
+	result, err := t.e.DB.Exec(
+		sql,
+		t.Name,
+		t.Brand,
+		t.Connection,
+		t.Script,
+		t.Args,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, _ := result.LastInsertId()
+	t.ID = int(id)
+	return nil
+}
+
+func (t *Type) update() error {
+	sql := `UPDATE "type" SET "name" = ?, "brand" = ?, "connection" = ?, "script" = ?, "args" = ? WHERE "id" = ?`
+
+	_, err := t.e.DB.Exec(
+		sql,
+		t.Name,
+		t.Brand,
+		t.Connection,
+		t.Script,
+		t.Args,
+		t.ID,
+	)
+	return err
 }

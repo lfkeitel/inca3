@@ -29,8 +29,7 @@
                     id: 0,
                     name: '',
                     address: '',
-                    brand: '',
-                    connection: ''
+                    type: { id: 1 }
                 }
             }
         },
@@ -38,9 +37,15 @@
         methods: {
             saveDevice: function() {
                 console.log("Saving device");
+                // Get type ID and convert to int
+                this.device.type = { id: +$('#deviceType').val() };
                 API.saveDevice(this.device, function(data) {
                     loadDeviceList();
                     changeState('');
+                    toastr["success"]("Device Saved");
+                }, function(resp) {
+                    var json = resp.responseJSON;
+                    toastr["error"](json.message);
                 });
             },
             cancel: function() {
@@ -60,12 +65,14 @@
         },
         methods: {
             addDevice: function() {
+                populateTypes();
                 changeState('add', 'deviceAdd');
             },
         }
     });
 
     if (w.location.hash === '#add') {
+        populateTypes();
         vm.section = "deviceAdd";
     }
 
@@ -77,13 +84,31 @@
         });
     }
 
+    function populateTypes() {
+        API.getAllTypes(function(data) {
+            var types = data.data;
+            var typeSelect = $('#deviceType');
+
+            for (var i = 0; i < types.length; i++) {
+                var o = types[i];
+                typeSelect.append($('<option>', {
+                    value: o.id,
+                    text: o.name
+                }));
+            }
+        }, function(j, t, e) {
+            console.log(e);
+            console.log(j.responseJSON);
+        })
+    }
+
     function changeState(hash, section) {
         if (hash === '' || vm.section === section) {
             w.location.hash = '';
             vm.section = defaultSection;
             return;
         }
-        w.location.hash = hash;
+        w.location.hash = '#' + hash;
         vm.section = section;
     }
 

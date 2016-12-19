@@ -8,9 +8,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="entry in tableData" class="clickable-row">
-                        <td v-for="key in tableCols" v-on:click="gotoDevice(entry['slug'])">
-                            ${entry[key]}
+                    <tr v-for="entry in tableData" class="clickable-row" v-on:click="gotoDevice(entry['slug'])">
+                        <td>
+                            ${entry['name']}
+                        </td>
+                        <td>
+                            ${entry['address']}
+                        </td>
+                        <td>
+                            ${entry['type']['connection']}
+                        </td>
+                        <td>
+                            ${entry['type']['brand']}
                         </td>
                     </tr>
                 </tbody>

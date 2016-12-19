@@ -14,7 +14,7 @@ import (
 
 type Config struct {
 	e          *utils.Environment
-	ID         string    `json:"id"`
+	ID         int       `json:"id"`
 	Slug       string    `json:"slug"`
 	DeviceID   int       `json:"deviceID"`
 	Filename   string    `json:"-"`
@@ -24,7 +24,7 @@ type Config struct {
 	Text       string    `json:"body"`
 }
 
-func newConfig(e *utils.Environment) *Config {
+func NewConfig(e *utils.Environment) *Config {
 	return &Config{e: e}
 }
 
@@ -42,7 +42,7 @@ func GetConfigBySlug(e *utils.Environment, slug string) (*Config, error) {
 		return nil, err
 	}
 	if len(configs) == 0 {
-		return newConfig(e), nil
+		return NewConfig(e), nil
 	}
 	return configs[0], nil
 }
@@ -53,7 +53,7 @@ func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 		return nil, err
 	}
 	if len(configs) == 0 {
-		return newConfig(e), nil
+		return NewConfig(e), nil
 	}
 	return configs[0], nil
 }
@@ -69,7 +69,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 
 	var results []*Config
 	for rows.Next() {
-		c := newConfig(e)
+		c := NewConfig(e)
 		var created int64
 		err := rows.Scan(
 			&c.ID,
@@ -83,7 +83,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 			continue
 		}
 
-		f := filepath.Join(e.Config.Configs.BaseDir, c.Filename)
+		f := filepath.Join(e.Config.DirPaths.BaseDir, c.Filename)
 		if !utils.FileExists(f) {
 			continue
 		}
@@ -121,7 +121,7 @@ func (c *Config) LoadText() error {
 }
 
 func (c *Config) getText() ([]byte, error) {
-	filename := filepath.Join(c.e.Config.Configs.BaseDir, c.Filename)
+	filename := filepath.Join(c.e.Config.DirPaths.BaseDir, c.Filename)
 
 	if !utils.FileExists(filename) {
 		return nil, errors.New("Config file not found")
@@ -144,4 +144,53 @@ func (c *Config) getText() ([]byte, error) {
 	}
 	defer reader.Close()
 	return ioutil.ReadAll(reader)
+}
+
+func (c *Config) Delete() error {
+	sql := `DELETE FROM "config" WHERE "id" = ?`
+	_, err := c.e.DB.Exec(sql, c.ID)
+	return err
+}
+
+func (c *Config) Save() error {
+	if c.ID == 0 {
+		return c.create()
+	}
+	return c.update()
+}
+
+func (c *Config) create() error {
+	sql := `INSERT INTO "config" ("slug", "device", "created", "filename", "compressed") VALUES (?,?,?,?,?)`
+
+	result, err := c.e.DB.Exec(
+		sql,
+		c.Slug,
+		c.DeviceID,
+		c.Created.Unix(),
+		c.Filename,
+		c.Compressed,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, _ := result.LastInsertId()
+	c.ID = int(id)
+	return nil
+}
+
+func (c *Config) update() error {
+	sql := `UPDATE "config" SET "slug" = ?, "device" = ?, "created" = ?, "filename" = ?, "compressed" = ? WHERE "id" = ?`
+
+	_, err := c.e.DB.Exec(
+		sql,
+		c.Slug,
+		c.DeviceID,
+		c.Created.Unix(),
+		c.Filename,
+		c.Compressed,
+		c.ID,
+	)
+	return err
 }

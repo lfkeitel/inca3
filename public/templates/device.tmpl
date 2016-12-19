@@ -9,6 +9,7 @@
             <h2>${device.name}</h2>
             <div id="controls">
                 <button v-on:click="editDevice" class="btn btn-primary">Edit</button>
+                <button v-on:click="deleteDevice" class="btn btn-danger">Delete</button>
             </div>
             <config-list
                 :table-data="tableData"

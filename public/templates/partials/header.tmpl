@@ -10,6 +10,8 @@
 
     <link href="/static/styles/vendor/bootstrap.min.css" rel="stylesheet">
     <link href="/static/styles/vendor/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="/static/styles/vendor/toastr.min.css" rel="stylesheet">
+    <link href="/static/styles/vendor/js-modals.css" rel="stylesheet">
     <link href="/static/styles/css/styles.css" rel="stylesheet">
 
     <!-- Fav and touch icons -->
@@ -36,14 +38,24 @@
                         <a href="/devices">Devices</a>
                     </li>
                     <li>
-                        <a href="/manage/devices">Manage Devices</a>
-                    </li>
-                    <li>
-                        <a href="/manage/types">Manage Types</a>
+                        <a href="/types">Device Types</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
+    <div class="alert alert-success alert-fixed" id="succ-alert" role="alert" style="display:none;">
+        <span id="succ-alert-msg"></span>
+        <button type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="alert alert-danger alert-fixed" id="error-alert" role="alert" style="display:none;">
+        <span id="error-alert-msg"></span>
+        <button type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
     <div class="container">
 {{end}}
