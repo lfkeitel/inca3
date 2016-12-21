@@ -108,10 +108,10 @@ func createTypeTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "type" (
 		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 		"name" TEXT NOT NULL,
+		"slug" TEXT NOT NULL UNIQUE,
 		"brand" TEXT NOT NULL,
 		"connection" TEXT NOT NULL,
-		"script" TEXT NOT NULL,
-		"args" TEXT NOT NULL
+		"script" TEXT NOT NULL
 	)`
 
 	_, err := d.DB.Exec(sql)
@@ -121,7 +121,7 @@ func createTypeTable(d *DatabaseAccessor) error {
 func createConfigTable(d *DatabaseAccessor) error {
 	sql := `CREATE TABLE "config" (
 		"id" INTEGER PRIMARY KEY NOT NULL,
-		"slug" TEXT NOT NULL,
+		"slug" TEXT NOT NULL UNIQUE,
 		"device" INTEGER NOT NULL,
 		"created" INTEGER NOT NULL,
 		"filename" TEXT NOT NULL,

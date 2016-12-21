@@ -1,0 +1,17 @@
+{{define "type-list"}}
+    {{template "header"}}
+
+    <div class="row clearfix">
+        <div class="col-md-12 column" id="app">
+            <div id="controls">
+                <button class="btn btn-primary" type="button" id="add-type-btn">Add</button>
+            </div>
+
+            {{template "partial-type-info-form" "add"}}
+
+            {{template "partial-type-list" .types}}
+        </div>
+    </div>
+
+    {{template "footer" dict "e" $.e "js" (list "type-list")}}
+{{end}}

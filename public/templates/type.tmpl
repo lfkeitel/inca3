@@ -1,0 +1,20 @@
+{{define "type"}}
+    {{template "header"}}
+
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <h2>{{.type.Name}}</h2>
+
+            <div id="controls">
+                <button id="delete-type-btn" class="btn btn-danger">Delete</button>
+            </div>
+
+            <style>#edit-form {display: block;}</style>
+            {{template "partial-type-info-form" "edit"}}
+        </div>
+    </div>
+
+    <script type="application/json" id="type-json">{{.type}}</script>
+
+    {{template "footer" dict "e" $.e "js" (list "type")}}
+{{end}}

@@ -1,0 +1,30 @@
+{{define "partial-type-info-form"}}
+<form id="edit-form">
+    <div class="form-group">
+        <label for="type-name">Name</label>
+        <input type="text" class="form-control" id="type-name">
+    </div>
+    <div class="form-group">
+        <label for="type-brand">Brand</label>
+        <input type="text" class="form-control" id="type-brand">
+    </div>
+    <div class="form-group">
+        <label for="type-connection">Connection</label>
+        <select class="form-control" id="type-connection">
+            <option value="ssh">SSH</option>
+            <option value="telnet">Telnet</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="type-script">Script</label>
+        <select class="form-control" id="type-script"></select>
+    </div>
+
+    <div class="form-group">
+        <button class="btn btn-success" type="button" id="save-create-btn">
+            {{if eq . "add"}}Create{{else}}Save{{end}}
+        </button>
+        <button class="btn btn-danger" type="button" id="cancel-edit-btn">Cancel</button>
+    </div>
+</form>
+{{end}}

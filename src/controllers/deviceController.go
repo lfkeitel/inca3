@@ -179,11 +179,10 @@ func (d *DeviceController) ApiPostDevice(w http.ResponseWriter, r *http.Request,
 	postedDevice.Address = apiDevice.Address
 	postedDevice.Name = apiDevice.Name
 
-	err = postedDevice.Save()
-	if err != nil {
-		resp.Message = err.Error()
+	if err := postedDevice.Save(); err != nil {
+		resp.Message = "Failed to save device"
 		d.e.Log.WithField("Err", err).Error("Failed to save device")
-		resp.WriteResponse(w, http.StatusBadRequest)
+		resp.WriteResponse(w, http.StatusInternalServerError)
 		return
 	}
 

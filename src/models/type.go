@@ -6,18 +6,26 @@ type Type struct {
 	e          *utils.Environment
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
+	Slug       string `json:"slug"`
 	Brand      string `json:"brand"`
 	Connection string `json:"connection"`
 	Script     string `json:"script"`
-	Args       string `json:"args"`
 }
 
-func newType(e *utils.Environment) *Type {
+func NewType(e *utils.Environment) *Type {
 	return &Type{e: e}
 }
 
 func GetAllTypes(e *utils.Environment) ([]*Type, error) {
 	return doTypeQuery(e, "", nil)
+}
+
+func GetTypeBySlug(e *utils.Environment, name string) (*Type, error) {
+	types, err := doTypeQuery(e, `WHERE "slug" = ?`, name)
+	if err != nil || len(types) == 0 {
+		return nil, err
+	}
+	return types[0], nil
 }
 
 func GetTypeByID(e *utils.Environment, id int) (*Type, error) {
@@ -26,13 +34,13 @@ func GetTypeByID(e *utils.Environment, id int) (*Type, error) {
 		return nil, err
 	}
 	if len(types) == 0 {
-		return newType(e), nil
+		return nil, nil
 	}
 	return types[0], nil
 }
 
 func doTypeQuery(e *utils.Environment, where string, values ...interface{}) ([]*Type, error) {
-	sql := `SELECT "id", "name", "brand", "connection", "script", "args" FROM "type" ` + where
+	sql := `SELECT "id", "name", "slug", "brand", "connection", "script" FROM "type" ` + where
 
 	rows, err := e.DB.Query(sql, values...)
 	if err != nil {
@@ -42,14 +50,14 @@ func doTypeQuery(e *utils.Environment, where string, values ...interface{}) ([]*
 
 	var results []*Type
 	for rows.Next() {
-		t := newType(e)
+		t := NewType(e)
 		err := rows.Scan(
 			&t.ID,
 			&t.Name,
+			&t.Slug,
 			&t.Brand,
 			&t.Connection,
 			&t.Script,
-			&t.Args,
 		)
 		if err != nil {
 			continue
@@ -60,6 +68,8 @@ func doTypeQuery(e *utils.Environment, where string, values ...interface{}) ([]*
 }
 
 func (t *Type) Save() error {
+	t.Slug = utils.GenerateSlug(t.Name)
+
 	if t.ID == 0 {
 		return t.create()
 	}
@@ -67,15 +77,15 @@ func (t *Type) Save() error {
 }
 
 func (t *Type) create() error {
-	sql := `INSERT INTO "type" ("name", "brand", "connection", "script", "args") VALUES (?,?,?,?,?)`
+	sql := `INSERT INTO "type" ("name", "slug", "brand", "connection", "script") VALUES (?,?,?,?,?)`
 
 	result, err := t.e.DB.Exec(
 		sql,
 		t.Name,
+		t.Slug,
 		t.Brand,
 		t.Connection,
 		t.Script,
-		t.Args,
 	)
 
 	if err != nil {
@@ -88,16 +98,22 @@ func (t *Type) create() error {
 }
 
 func (t *Type) update() error {
-	sql := `UPDATE "type" SET "name" = ?, "brand" = ?, "connection" = ?, "script" = ?, "args" = ? WHERE "id" = ?`
+	sql := `UPDATE "type" SET "name" = ?, "slug" = ?, "brand" = ?, "connection" = ?, "script" = ? WHERE "id" = ?`
 
 	_, err := t.e.DB.Exec(
 		sql,
 		t.Name,
+		t.Slug,
 		t.Brand,
 		t.Connection,
 		t.Script,
-		t.Args,
 		t.ID,
 	)
+	return err
+}
+
+func (t *Type) Delete() error {
+	sql := `DELETE FROM "type" WHERE "id" = ?`
+	_, err := t.e.DB.Exec(sql, t.ID)
 	return err
 }

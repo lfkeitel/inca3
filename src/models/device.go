@@ -126,18 +126,12 @@ func (d *Device) Save() error {
 			return err
 		}
 	}
-	d.Slug = d.generateSlug(d.Name)
+	d.Slug = utils.GenerateSlug(d.Name)
 
 	if d.ID == 0 {
 		return d.create()
 	}
 	return d.update()
-}
-
-func (d *Device) generateSlug(raw string) string {
-	raw = strings.TrimSpace(raw)
-	raw = strings.ToLower(raw)
-	return strings.Replace(raw, " ", "-", -1)
 }
 
 func (d *Device) create() error {

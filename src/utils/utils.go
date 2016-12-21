@@ -4,8 +4,11 @@
 
 package utils
 
-import "os"
-import "strconv"
+import (
+	"os"
+	"strconv"
+	"strings"
+)
 
 // FileExists determines if file exists.
 func FileExists(file string) bool {
@@ -19,4 +22,11 @@ func IntSliceToString(i []int) []string {
 		s[in] = strconv.Itoa(num)
 	}
 	return s
+}
+
+func GenerateSlug(raw string) string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.ToLower(raw)
+	raw = strings.Replace(raw, "_", "-", -1)
+	return strings.Replace(raw, " ", "-", -1)
 }

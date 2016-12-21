@@ -3,7 +3,6 @@ package jobs
 import (
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"path/filepath"
@@ -74,7 +73,7 @@ func (w *worker) run(devices []*models.Device) {
 		}
 
 		configFile := filepath.Join(configFileDir, date+".conf")
-		args := w.getArguments(d.Type.Args, d.Address, configFile)
+		args := w.getArguments(d.Address, configFile)
 
 		wg.Add(1)
 		go func(de *models.Device, cFile string, argList []string) {
@@ -106,29 +105,14 @@ func (w *worker) run(devices []*models.Device) {
 	w.job.Status = models.Finished
 }
 
-func (w *worker) getArguments(argStr string, host string, filename string) []string {
-	args := strings.Split(argStr, ";")
-	argList := make([]string, len(args))
-	for i, a := range args {
-		switch a {
-		case "$address":
-			argList[i] = host
-			break
-		case "$username":
-			argList[i] = w.e.Config.Job.RemoteUsername
-			break
-		case "$password":
-			argList[i] = w.e.Config.Job.RemotePassword
-			break
-		case "$logfile":
-			argList[i] = filename
-			break
-		case "$enablepw":
-			argList[i] = w.e.Config.Job.EnablePassword
-			break
-		}
+func (w *worker) getArguments(host string, filename string) []string {
+	return []string{
+		host,
+		w.e.Config.Job.RemoteUsername,
+		w.e.Config.Job.RemotePassword,
+		filename,
+		w.e.Config.Job.EnablePassword,
 	}
-	return argList
 }
 
 func (w *worker) execScript(sfn string, args []string) error {

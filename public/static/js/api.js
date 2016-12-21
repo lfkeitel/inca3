@@ -11,6 +11,7 @@
 
     var API = function() { };
 
+    // Device APIs
     API.prototype.getAllDevices = function(ok, fail) {
         $.getJSON("/api/devices").done(ok).fail(fail);
     }
@@ -40,10 +41,31 @@
         makeRequest("DELETE", "/api/devices/" + slug, "", ok, fail);
     }
 
+    // Type APIs
     API.prototype.getAllTypes = function(ok, fail) {
         $.getJSON("/api/types").done(ok).fail(fail);
     }
 
+    API.prototype.getTypeScripts = function(ok, fail) {
+        $.getJSON("/api/types/_scripts").done(ok).fail(fail);
+    }
+
+    API.prototype.createType = function(type, ok, fail) {
+        var json = JSON.stringify(type);
+        makeRequest("POST", "/api/types", json, ok, fail);
+    }
+
+    API.prototype.saveType = function(type, ok, fail) {
+        var json = JSON.stringify(type);
+        makeRequest("PUT", "/api/types/" + type.slug, json, ok, fail);
+    }
+
+    API.prototype.deleteType = function(slug, ok, fail) {
+        slug = encodeURIComponent(slug);
+        makeRequest("DELETE", "/api/types/" + slug, "", ok, fail);
+    }
+
+    // Job APIs
     API.prototype.startJob = function(spec, ok, fail) {
         var json = JSON.stringify(spec);
         makeRequest("POST", "/api/job/start", json, ok, fail);

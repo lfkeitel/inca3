@@ -38,13 +38,14 @@ func (a *APIResponse) Encode() []byte {
 }
 
 func (a *APIResponse) WriteResponse(w http.ResponseWriter, code int) (int64, error) {
-	r := a.Encode()
-	l := len(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
+
 	if code == http.StatusNoContent {
 		return 0, nil
 	}
+
+	r := a.Encode()
 	w.Write(r)
-	return int64(l), nil
+	return int64(len(r)), nil
 }

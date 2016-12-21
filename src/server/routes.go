@@ -18,6 +18,10 @@ func LoadRoutes(e *utils.Environment) http.Handler {
 	r.GET("/devices/:slug", d.ShowDevice)
 	r.GET("/devices/:slug/:config", d.ShowConfig)
 
+	t := controllers.GetTypeController(e)
+	r.GET("/types", t.ShowTypeList)
+	r.GET("/types/:slug", t.ShowType)
+
 	r.Handler("GET", "/api/*a", apiGETRoutes(e))
 	r.Handler("PUT", "/api/*a", apiPUTRoutes(e))
 	r.Handler("POST", "/api/*a", apiPOSTRoutes(e))
@@ -48,7 +52,7 @@ func apiGETRoutes(e *utils.Environment) http.Handler {
 
 	t := controllers.GetTypeController(e)
 	r.GET("/api/types", t.ApiGetTypes)
-	r.GET("/api/types/:id", t.ApiGetTypes)
+	r.GET("/api/types/:slug", t.ApiGetTypes)
 
 	return r
 }
@@ -60,7 +64,7 @@ func apiPUTRoutes(e *utils.Environment) http.Handler {
 	r.PUT("/api/devices/:slug", d.ApiPutDevice)
 
 	t := controllers.GetTypeController(e)
-	r.PUT("/api/types/:id", t.ApiPutType)
+	r.PUT("/api/types/:slug", t.ApiPutType)
 
 	return r
 }
@@ -76,7 +80,7 @@ func apiPOSTRoutes(e *utils.Environment) http.Handler {
 	r.POST("/api/job/stop/:id", j.ApiStopJob)
 
 	t := controllers.GetTypeController(e)
-	r.POST("/api/types/:id", t.ApiPostType)
+	r.POST("/api/types", t.ApiPostType)
 
 	return r
 }
@@ -88,7 +92,7 @@ func apiDELETERoutes(e *utils.Environment) http.Handler {
 	r.DELETE("/api/devices/:slug", d.ApiDeleteDevice)
 
 	t := controllers.GetTypeController(e)
-	r.DELETE("/api/types/:id", t.ApiDeleteType)
+	r.DELETE("/api/types/:slug", t.ApiDeleteType)
 
 	return r
 }
