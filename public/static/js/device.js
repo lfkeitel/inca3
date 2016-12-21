@@ -1,143 +1,62 @@
 (function($, w) {
-    Vue.component("config-list", {
-        template: "#config-list-template",
-        delimiters: delimiters,
-        props: {
-            tableData: {
-                type: Array,
-                required: false
-            },
-            tableCols: {
-                type: Array,
-                required: true
-            },
-            jsonKeys: {
-                type: Array,
-                required: true
-            },
-            deviceName: {
-                type: String,
-                required: true
-            }
-        },
-        filters: filters,
-        methods: {
-            gotoConfig: function(id) {
-                window.location = "/devices/" + this.deviceName + "/" + id;
-            }
-        }
-    });
+    var thisDevice = {};
 
-    Vue.component("device-edit-form", {
-        template: "#edit-form-template",
-        delimiters: delimiters,
-        props: {
-            device: {
-                type: Object,
-                required: true
-            }
-        },
-        filters: filters,
-        methods: {
-            saveDevice: function() {
-                console.log("Saving device");
-                var oldSlug = this.device.slug;
-                this.device.type = { id: +$('#deviceType').val() };
-                API.saveDevice(this.device, function(data) {
-                    if (data.data.slug !== oldSlug) {
-                        flashes.add("success", "Device saved");
-                        window.location = "/devices/" + data.data.slug;
-                        return;
-                    }
-                    changeState('');
-                    toastr["success"]("Device Saved");
-                }, function(resp) {
-                    var json = resp.responseJSON;
-                    toastr["error"](json.message);
-                });
-            },
+    function bindUIButtons() {
+        $('#edit-device-btn').click(function() {
+            $('#edit-form').slideToggle();
+        });
 
-            cancelEdit: function() {
-                this.$emit('cancel-edit');
-            }
-        }
-    });
+        $('#cancel-edit-btn').click(function() {
+            $('#edit-form').slideUp(400, populateEditForm);
+        });
 
-    var defaultSection = "configs";
-    var vm = new Vue({
-        el: "#app",
-        delimiters: delimiters,
-        data: {
-            tableColumns: ["date", "name", "compressed", "size"],
-            jsonKeys: ["created", "slug", "compressed", "size"],
-            tableData: [],
-            device: { slug: '', type: { id: 0 } },
-            section: defaultSection
-        },
-        methods: {
-            editDevice: function() {
-                var typeID = this.device.type.id
-                populateTypes(function() {
-                    $('#deviceType').val(String(typeID));
-                });
-                changeState('edit', 'deviceEdit');
-            },
+        $('#delete-device-btn').click(function() {
+            deleteDevice();
+        });
 
-            cancelEdit: function() {
-                this.device = getOriginalDeviceData();
-                changeState('');
-            },
-
-            deleteDevice: function() {
-                var slug = this.device.slug;
-                var confirm = new jsConfirm();
-                confirm.show("Are you sure you want to delete this device?<br>This will also delete configurations for this device", function() {
-                    API.deleteDevice(slug, function() {
-                        flashes.add('success', "Device deleted");
-                        window.location = "/devices";
-                        return
-                    }, function(resp) {
-                        toastr["error"](resp.responseJSON.message);
-                    })
-                });
-            }
-        }
-    });
-
-    var devID = w.location.pathname.split('/');
-    devID = devID[devID.length - 1];
-
-    if (w.location.hash === '#edit') {
-        populateTypes();
-        vm.section = "deviceEdit";
-    }
-
-    var originalDevice = "";
-
-    API.getDevice(devID, function(data) {
-        originalDevice = JSON.stringify(data.data);
-        vm.device = data.data;
-        getDeviceConfigs();
-    }, function(j, t, e) {
-        console.log(e);
-    });
-
-    function getDeviceConfigs() {
-        API.getDeviceConfigs(devID, function(data) {
-            vm.tableData = data.data;
-        }, function(j, t, e) {
-            console.error(e);
+        $('#save-create-btn').click(function() {
+            saveDevice();
         });
     }
 
-    function getOriginalDeviceData() {
-        return JSON.parse(originalDevice);
+    function saveDevice() {
+        var d = {
+            name: $('#device-name').val(),
+            address: $('#device-addr').val(),
+            slug: thisDevice.slug,
+            type: { id: Number($('#device-type').val()) }
+        };
+
+        API.saveDevice(d, function(data) {
+            if (data.data.slug !== thisDevice.slug) {
+                flashes.add("success", "Device saved");
+                window.location = "/devices/" + data.data.slug;
+                return;
+            }
+            thisDevice = data.data;
+            toastr["success"]("Device Saved");
+            $('#edit-form').slideUp();
+        }, function(resp) {
+            var json = resp.responseJSON;
+            toastr["error"](json.message);
+        });
+    }
+
+    function getThisDevice() {
+        thisDevice = JSON.parse($('#device-json').html());
+    }
+
+    function populateEditForm() {
+        $('#device-name').val(thisDevice.name);
+        $('#device-addr').val(thisDevice.address);
+        $('#device-type').val(String(thisDevice.type.id))
     }
 
     function populateTypes(callback) {
         API.getAllTypes(function(data) {
             var types = data.data;
-            var typeSelect = $('#deviceType');
+            var typeSelect = $('#device-type');
+            typeSelect.empty();
 
             for (var i = 0; i < types.length; i++) {
                 var o = types[i];
@@ -154,13 +73,21 @@
         })
     }
 
-    function changeState(hash, section) {
-        if (hash === '' || vm.section === section) {
-            w.location.hash = '';
-            vm.section = defaultSection;
-            return;
-        }
-        w.location.hash = hash;
-        vm.section = section;
+    function deleteDevice() {
+        var confirm = new jsConfirm();
+        confirm.show("Are you sure you want to delete this device?<br>This will also delete configurations for this device", function() {
+            API.deleteDevice(thisDevice.slug, function() {
+                flashes.add('success', "Device deleted");
+                window.location = "/devices";
+                return
+            }, function(resp) {
+                toastr["error"](resp.responseJSON.message);
+            })
+        });
     }
+
+    bindConfigClickEvents(); // common.js
+    bindUIButtons();
+    getThisDevice();
+    populateTypes(populateEditForm);
 })(jQuery, window);

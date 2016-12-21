@@ -52,6 +52,12 @@ toastr.options = {
     "hideMethod": "fadeOut"
 }
 
+function bindConfigClickEvents() {
+    $('.clickable-row').click(function() {
+        window.location = $(this).data('href');
+    });
+}
+
 var flashes = {
     lsKey: "flashes",
 

@@ -25,7 +25,7 @@ func (d *Device) Print() {
 	fmt.Printf("Type: %s:%s\n", d.Type.Brand, d.Type.Connection)
 }
 
-func newDevice(e *utils.Environment) *Device {
+func NewDevice(e *utils.Environment) *Device {
 	return &Device{e: e}
 }
 
@@ -40,7 +40,7 @@ func GetDeviceByID(e *utils.Environment, id int) (*Device, error) {
 	}
 
 	if len(devices) == 0 {
-		return newDevice(e), nil
+		return NewDevice(e), nil
 	}
 	return devices[0], nil
 }
@@ -52,7 +52,7 @@ func GetDeviceBySlug(e *utils.Environment, name string) (*Device, error) {
 	}
 
 	if len(devices) == 0 {
-		return newDevice(e), nil
+		return NewDevice(e), nil
 	}
 	return devices[0], nil
 }
@@ -74,7 +74,7 @@ func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([
 	var results []*Device
 	for rows.Next() {
 		var typeID int
-		d := newDevice(e)
+		d := NewDevice(e)
 		err := rows.Scan(
 			&d.ID,
 			&d.Slug,
@@ -136,8 +136,8 @@ func (d *Device) Save() error {
 
 func (d *Device) generateSlug(raw string) string {
 	raw = strings.TrimSpace(raw)
-	raw = strings.Title(raw)
-	return strings.Replace(raw, " ", "", -1)
+	raw = strings.ToLower(raw)
+	return strings.Replace(raw, " ", "-", -1)
 }
 
 func (d *Device) create() error {

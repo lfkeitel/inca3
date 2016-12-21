@@ -39,7 +39,8 @@ code {
   cursor: pointer;
 }
 
-.edit-form {
+#edit-form {
+  display: none;
   margin-top: 8px;
 }
 

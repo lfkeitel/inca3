@@ -57,7 +57,7 @@ func apiPUTRoutes(e *utils.Environment) http.Handler {
 	r := httprouter.New()
 
 	d := controllers.GetDeviceController(e)
-	r.PUT("/api/devices/:slug", d.ApiSaveDevice)
+	r.PUT("/api/devices/:slug", d.ApiPutDevice)
 
 	t := controllers.GetTypeController(e)
 	r.PUT("/api/types/:id", t.ApiPutType)
@@ -69,7 +69,7 @@ func apiPOSTRoutes(e *utils.Environment) http.Handler {
 	r := httprouter.New()
 
 	d := controllers.GetDeviceController(e)
-	r.POST("/api/devices", d.ApiSaveDevice)
+	r.POST("/api/devices", d.ApiPostDevice)
 
 	j := controllers.GetJobController(e)
 	r.POST("/api/job/start", j.ApiStartJob)

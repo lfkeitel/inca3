@@ -28,16 +28,48 @@ func GetDeviceController(e *utils.Environment) *DeviceController {
 
 func (d *DeviceController) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if p.ByName("slug") != "" {
-		d.showDeviceConfigList(w, r)
+		d.showDeviceConfigList(w, r, p.ByName("slug"))
 		return
 	}
 
-	d.e.View.NewView("device-list", r).Render(w, nil)
+	devices, err := models.GetAllDevices(d.e)
+	if err != nil {
+		d.e.Log.WithField("Err", err).Error("Failed to get devices")
+		return
+	}
+
+	data := map[string]interface{}{
+		"devices": devices,
+	}
+	d.e.View.NewView("device-list", r).Render(w, data)
 	return
 }
 
-func (d *DeviceController) showDeviceConfigList(w http.ResponseWriter, r *http.Request) {
-	d.e.View.NewView("device", r).Render(w, nil)
+func (d *DeviceController) showDeviceConfigList(w http.ResponseWriter, r *http.Request, slug string) {
+	device, err := models.GetDeviceBySlug(d.e, slug)
+	if err != nil {
+		d.e.Log.WithField("Err", err).Error("Failed to get device")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if device.ID == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	configs, err := models.GetConfigsForDevice(d.e, device.ID)
+	if err != nil {
+		d.e.Log.WithField("Err", err).Error("Failed to get configs")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"device":  device,
+		"configs": configs,
+	}
+	d.e.View.NewView("device", r).Render(w, data)
 }
 
 func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -45,7 +77,7 @@ func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p 
 	configSlug := p.ByName("config")
 
 	if configSlug == "" {
-		d.showDeviceConfigList(w, r)
+		d.showDeviceConfigList(w, r, name)
 		return
 	}
 
@@ -56,6 +88,7 @@ func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p 
 	}
 
 	if device.ID == 0 {
+		d.e.Log.Debug("Device not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -67,6 +100,7 @@ func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p 
 	}
 
 	if config.ID == 0 {
+		d.e.Log.Debug("Config not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -112,12 +146,12 @@ func (d *DeviceController) ApiGetDevices(w http.ResponseWriter, r *http.Request,
 	return
 }
 
-func (d *DeviceController) ApiSaveDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (d *DeviceController) ApiPostDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	decoder := json.NewDecoder(r.Body)
 
 	resp := utils.NewAPIResponse("", nil)
-	var device *models.Device
-	err := decoder.Decode(&device)
+	var apiDevice *models.Device
+	err := decoder.Decode(&apiDevice)
 	if err != nil {
 		resp.Message = "Invalid JSON"
 		d.e.Log.WithField("Err", err).Error("Invalid JSON")
@@ -126,39 +160,26 @@ func (d *DeviceController) ApiSaveDevice(w http.ResponseWriter, r *http.Request,
 	}
 	defer r.Body.Close()
 
-	device.Type, err = models.GetTypeByID(d.e, device.Type.ID)
+	postedDevice := models.NewDevice(d.e)
+
+	postedDevice.Type, err = models.GetTypeByID(d.e, apiDevice.Type.ID)
 	if err != nil {
 		resp.Message = "Unknown device type"
 		resp.WriteResponse(w, http.StatusBadRequest)
 		return
 	}
 
-	if r.Method == "PUT" {
-		if device.Slug != p.ByName("slug") {
-			resp.Message = "Slug mismatch"
-			resp.WriteResponse(w, http.StatusBadRequest)
-			return
-		}
-
-		if device.ID == 0 {
-			resp.Message = "No device ID given"
-			resp.WriteResponse(w, http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Technically, PUT doesn't need to send the entire object only changed
-	// data. But for now we require a full struct
-	if device.Address == "" ||
-		device.Name == "" {
+	if apiDevice.Address == "" ||
+		apiDevice.Name == "" {
 		resp.Message = "Missing data field"
 		resp.WriteResponse(w, http.StatusBadRequest)
 		return
 	}
 
-	device.SetEnv(d.e)
+	postedDevice.Address = apiDevice.Address
+	postedDevice.Name = apiDevice.Name
 
-	err = device.Save()
+	err = postedDevice.Save()
 	if err != nil {
 		resp.Message = err.Error()
 		d.e.Log.WithField("Err", err).Error("Failed to save device")
@@ -167,7 +188,59 @@ func (d *DeviceController) ApiSaveDevice(w http.ResponseWriter, r *http.Request,
 	}
 
 	resp.Message = "Device saved successfully"
-	resp.Data = device
+	resp.Data = postedDevice
+	resp.WriteResponse(w, http.StatusOK)
+}
+
+func (d *DeviceController) ApiPutDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	decoder := json.NewDecoder(r.Body)
+
+	resp := utils.NewAPIResponse("", nil)
+	var apiDevice *models.Device
+	err := decoder.Decode(&apiDevice)
+	if err != nil {
+		resp.Message = "Invalid JSON"
+		d.e.Log.WithField("Err", err).Error("Invalid JSON")
+		resp.WriteResponse(w, http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Retrieve device from database and work on it
+	originalDevice, err := models.GetDeviceBySlug(d.e, p.ByName("slug"))
+	if err != nil {
+		resp.Message = "Device " + p.ByName("slug") + " was not found"
+		resp.WriteResponse(w, http.StatusBadRequest)
+		return
+	}
+
+	// Copy data from api request if different
+	if apiDevice.Type.ID > 0 && apiDevice.Type.ID != originalDevice.Type.ID {
+		originalDevice.Type, err = models.GetTypeByID(d.e, apiDevice.Type.ID)
+		if err != nil {
+			resp.Message = "Unknown device type"
+			resp.WriteResponse(w, http.StatusBadRequest)
+			return
+		}
+	}
+
+	if apiDevice.Name != "" {
+		originalDevice.Name = apiDevice.Name
+	}
+
+	if apiDevice.Address != "" {
+		originalDevice.Address = apiDevice.Address
+	}
+
+	if err := originalDevice.Save(); err != nil {
+		resp.Message = "Error saving device"
+		d.e.Log.WithField("Err", err).Error("Failed to save device")
+		resp.WriteResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	resp.Message = "Device saved successfully"
+	resp.Data = originalDevice
 	resp.WriteResponse(w, http.StatusOK)
 }
 

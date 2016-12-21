@@ -1,20 +1,15 @@
 {{define "device-list"}}
     {{template "header"}}
 
-    {{template "vue-device-list"}}
-    {{template "vue-dev-edit-form" "add"}}
-
     <div class="row clearfix">
         <div class="col-md-12 column" id="app">
             <div id="controls">
-                <button v-on:click="addDevice" class="btn btn-primary">Add</button>
+                <button class="btn btn-primary" type="button" id="add-device-btn">Add</button>
             </div>
-            <device-list
-                :table-data="tableData"
-                :table-cols="tableColumns"
-                v-if="section == 'devList'">
-            </device-list>
-            <device-edit-form v-if="section == 'deviceAdd'"></device-edit-form>
+
+            {{template "partial-dev-info-form" "add"}}
+
+            {{template "partial-device-list" .devices}}
         </div>
     </div>
 

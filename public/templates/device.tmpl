@@ -1,30 +1,22 @@
 {{define "device"}}
     {{template "header"}}
 
-    {{template "vue-config-list"}}
-    {{template "vue-dev-edit-form" "edit"}}
-
     <div class="row clearfix">
-        <div class="col-md-12 column" id="app">
-            <h2>${device.name}</h2>
+        <div class="col-md-12 column">
+            <h2>{{.device.Name}}</h2>
+
             <div id="controls">
-                <button v-on:click="editDevice" class="btn btn-primary">Edit</button>
-                <button v-on:click="deleteDevice" class="btn btn-danger">Delete</button>
+                <button id="edit-device-btn" class="btn btn-primary">Edit</button>
+                <button id="delete-device-btn" class="btn btn-danger">Delete</button>
             </div>
-            <config-list
-                :table-data="tableData"
-                :table-cols="tableColumns"
-                :json-keys="jsonKeys"
-                :device-name="device.slug"
-                v-if="section == 'configs'">
-            </config-list>
-            <device-edit-form
-                :device="device"
-                v-if="section == 'deviceEdit'"
-                v-on:cancel-edit="cancelEdit">
-            </device-edit-form>
+
+            {{template "partial-dev-info-form" "edit"}}
+
+            {{template "partial-config-list" dict "configs" $.configs "device" $.device}}
         </div>
     </div>
+
+    <script type="application/json" id="device-json">{{.device}}</script>
 
     {{template "footer" dict "e" $.e "js" (list "device")}}
 {{end}}
