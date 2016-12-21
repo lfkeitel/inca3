@@ -3,15 +3,15 @@
 
     <div class="row clearfix">
         <div class="col-md-12 column">
-            <h3>Device: {{.device.Name}}</h3>
+            <h3>Device: <a href="/devices/{{.device.Slug}}">{{.device.Name}}</a></h3>
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-12 column">
-            <pre>{{.configText}}</pre>
+            <pre>{{.config.Text}}</pre>
         </div>
     </div>
 
-    {{template "footer"}}
+    {{template "footer" dict "e" $.e}}
 {{end}}

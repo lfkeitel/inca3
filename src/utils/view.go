@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"strconv"
+
 	"github.com/lfkeitel/verbose"
 )
 
@@ -50,16 +52,32 @@ func NewViewer(e *Environment, basepath string) (v *Views, err error) {
 			}
 			return dict, nil
 		},
+
 		"list": func(values ...interface{}) ([]interface{}, error) {
 			return values, nil
 		},
+
 		"plus1": func(a int) int {
 			return a + 1
+		},
+
+		"formatFileSize": func(size int64) string {
+			sizes := []string{"B", "KB", "MB", "GB"}
+			i := 0
+
+			for i = range sizes {
+				if size < 1024 {
+					break
+				}
+				size /= 1024
+			}
+
+			return strconv.FormatInt(size, 10) + sizes[i]
 		},
 	})
 
 	filepath.Walk(basepath, func(path string, info os.FileInfo, err1 error) error {
-		if strings.HasSuffix(path, ".tmpl") {
+		if strings.HasSuffix(path, "tmpl") {
 			if _, err := tmpl.ParseFiles(path); err != nil {
 				panic(err)
 			}
@@ -111,7 +129,7 @@ func (v *View) Render(w http.ResponseWriter, data map[string]interface{}) {
 	if data == nil {
 		data = make(map[string]interface{})
 	}
-	data["config"] = v.e.Config
+	data["e"] = v.e
 	if err := v.t.ExecuteTemplate(w, v.name, data); err != nil {
 		v.e.Log.WithFields(verbose.Fields{
 			"template": v.name,

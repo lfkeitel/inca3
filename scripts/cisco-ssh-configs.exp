@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Cisco" > $3
+echo $1 >> $3
+echo $2 >> $3

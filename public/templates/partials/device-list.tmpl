@@ -1,0 +1,32 @@
+{{define "partial-device-list"}}
+<div class="table-responsive">
+    <table class="device-list table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Connection</th>
+                <th>Brand</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .}}
+            <tr class="clickable-row" data-href="/devices/{{.Slug}}">
+                <td>
+                    {{.Name}}
+                </td>
+                <td>
+                    {{.Address}}
+                </td>
+                <td>
+                    {{.Type.Connection}}
+                </td>
+                <td>
+                    {{.Type.Brand}}
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

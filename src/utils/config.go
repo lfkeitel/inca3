@@ -39,8 +39,15 @@ type Config struct {
 		TLSKeyFile          string
 		RedirectHTTPToHTTPS bool
 	}
-	Configs struct {
-		BaseDir string
+	Job struct {
+		MaxConnections int32
+		RemoteUsername string
+		RemotePassword string
+		EnablePassword string
+	}
+	DirPaths struct {
+		BaseDir   string
+		ScriptDir string
 	}
 }
 

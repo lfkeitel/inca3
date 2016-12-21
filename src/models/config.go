@@ -2,6 +2,7 @@ package models
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -12,18 +13,38 @@ import (
 )
 
 type Config struct {
-	e                    *utils.Environment
-	ID, Device, Filename string
-	Created              time.Time
-	Compressed           bool
+	e          *utils.Environment
+	ID         int       `json:"id"`
+	Slug       string    `json:"slug"`
+	DeviceID   int       `json:"deviceID"`
+	Filename   string    `json:"-"`
+	Created    time.Time `json:"created"`
+	Compressed bool      `json:"compressed"`
+	Size       int64     `json:"size"`
+	Text       string    `json:"body"`
 }
 
-func newConfig(e *utils.Environment) *Config {
+func NewConfig(e *utils.Environment) *Config {
 	return &Config{e: e}
 }
 
-func GetConfigsForDevice(e *utils.Environment, id string) ([]*Config, error) {
+func GetAllConfigs(e *utils.Environment) ([]*Config, error) {
+	return doConfigQuery(e, "", nil)
+}
+
+func GetConfigsForDevice(e *utils.Environment, id int) ([]*Config, error) {
 	return doConfigQuery(e, `WHERE "device" = ? ORDER BY "created" DESC`, id)
+}
+
+func GetConfigBySlug(e *utils.Environment, slug string) (*Config, error) {
+	configs, err := doConfigQuery(e, `WHERE "slug" = ?`, slug)
+	if err != nil {
+		return nil, err
+	}
+	if len(configs) == 0 {
+		return NewConfig(e), nil
+	}
+	return configs[0], nil
 }
 
 func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
@@ -32,13 +53,13 @@ func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 		return nil, err
 	}
 	if len(configs) == 0 {
-		return newConfig(e), nil
+		return NewConfig(e), nil
 	}
 	return configs[0], nil
 }
 
 func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([]*Config, error) {
-	sql := `SELECT "id", "device", "created", "filename", "compressed" FROM "config" ` + where
+	sql := `SELECT "id", "slug", "device", "created", "filename", "compressed" FROM "config" ` + where
 
 	rows, err := e.DB.Query(sql, values...)
 	if err != nil {
@@ -48,11 +69,12 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 
 	var results []*Config
 	for rows.Next() {
-		c := newConfig(e)
+		c := NewConfig(e)
 		var created int64
 		err := rows.Scan(
 			&c.ID,
-			&c.Device,
+			&c.Slug,
+			&c.DeviceID,
 			&created,
 			&c.Filename,
 			&c.Compressed,
@@ -60,14 +82,46 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		if err != nil {
 			continue
 		}
+
+		f := filepath.Join(e.Config.DirPaths.BaseDir, c.Filename)
+		if !utils.FileExists(f) {
+			continue
+		}
+
+		fileInto, err := os.Stat(f)
+		if err != nil {
+			continue
+		}
+
+		c.Size = fileInto.Size()
 		c.Created = time.Unix(created, 0)
 		results = append(results, c)
 	}
 	return results, nil
 }
 
-func (c *Config) GetText() ([]byte, error) {
-	filename := filepath.Join(c.e.Config.Configs.BaseDir, c.Filename)
+func (c *Config) MarshalJSON() ([]byte, error) {
+	type Alias Config
+	return json.Marshal(&struct {
+		Created int64 `json:"created"`
+		*Alias
+	}{
+		Created: c.Created.Unix(),
+		Alias:   (*Alias)(c),
+	})
+}
+
+func (c *Config) LoadText() error {
+	t, err := c.getText()
+	if err != nil {
+		return err
+	}
+	c.Text = string(t)
+	return nil
+}
+
+func (c *Config) getText() ([]byte, error) {
+	filename := filepath.Join(c.e.Config.DirPaths.BaseDir, c.Filename)
 
 	if !utils.FileExists(filename) {
 		return nil, errors.New("Config file not found")
@@ -90,4 +144,53 @@ func (c *Config) GetText() ([]byte, error) {
 	}
 	defer reader.Close()
 	return ioutil.ReadAll(reader)
+}
+
+func (c *Config) Delete() error {
+	sql := `DELETE FROM "config" WHERE "id" = ?`
+	_, err := c.e.DB.Exec(sql, c.ID)
+	return err
+}
+
+func (c *Config) Save() error {
+	if c.ID == 0 {
+		return c.create()
+	}
+	return c.update()
+}
+
+func (c *Config) create() error {
+	sql := `INSERT INTO "config" ("slug", "device", "created", "filename", "compressed") VALUES (?,?,?,?,?)`
+
+	result, err := c.e.DB.Exec(
+		sql,
+		c.Slug,
+		c.DeviceID,
+		c.Created.Unix(),
+		c.Filename,
+		c.Compressed,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, _ := result.LastInsertId()
+	c.ID = int(id)
+	return nil
+}
+
+func (c *Config) update() error {
+	sql := `UPDATE "config" SET "slug" = ?, "device" = ?, "created" = ?, "filename" = ?, "compressed" = ? WHERE "id" = ?`
+
+	_, err := c.e.DB.Exec(
+		sql,
+		c.Slug,
+		c.DeviceID,
+		c.Created.Unix(),
+		c.Filename,
+		c.Compressed,
+		c.ID,
+	)
+	return err
 }

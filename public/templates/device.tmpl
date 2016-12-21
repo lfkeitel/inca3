@@ -3,29 +3,20 @@
 
     <div class="row clearfix">
         <div class="col-md-12 column">
-            <h4>Configurations:</h4>
-            <div class="table-responsive">
-                <table class="config-list table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Name</th>
-                            <th>Compressed</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {{range .configs}}
-                        <tr class="clickable-row" data-href="/devices/{{$.device.ID}}/{{.ID}}">
-                            <td class="col-md-3">{{.Created.String}}</td>
-                            <td>{{.ID}}</td>
-                            <td>{{.Compressed}}</td>
-                        </tr>
-                    {{end}}
-                    </tbody>
-                </table>
+            <h2>{{.device.Name}}</h2>
+
+            <div id="controls">
+                <button id="edit-device-btn" class="btn btn-primary">Edit</button>
+                <button id="delete-device-btn" class="btn btn-danger">Delete</button>
             </div>
+
+            {{template "partial-dev-info-form" "edit"}}
+
+            {{template "partial-config-list" dict "configs" $.configs "device" $.device}}
         </div>
     </div>
 
-    {{template "footer"}}
+    <script type="application/json" id="device-json">{{.device}}</script>
+
+    {{template "footer" dict "e" $.e "js" (list "device")}}
 {{end}}

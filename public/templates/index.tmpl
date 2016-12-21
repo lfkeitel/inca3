@@ -10,9 +10,9 @@
                 <div id="statusProgressBar" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1">
                 </div>
             </div>
-            <!--<button type="button" class="btn btn-default" id="startArchiveBtn">Start Archive Job</button>-->
+            <button type="button" class="btn btn-default" id="startArchiveBtn">Start Archive Job</button>
         </div>
     </div>
 
-    {{template "footer"}}
+    {{template "footer" dict "e" $.e "js" (list "index")}}
 {{end}}

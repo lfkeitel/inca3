@@ -2,32 +2,16 @@
     {{template "header"}}
 
     <div class="row clearfix">
-        <div class="col-md-12 column">
-            <h4>Device List:</h4>
-            <div class="table-responsive">
-                <table class="device-list table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>IP Address</th>
-                            <th>Protocol</th>
-                            <th>Brand</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {{range .devices}}
-                        <tr class="clickable-row" data-href="/devices/{{.ID}}">
-                            <td>{{.Name}}</td>
-                            <td>{{.Address}}</td>
-                            <td>{{.Connection}}</td>
-                            <td>{{.Brand}}</td>
-                        </tr>
-                    {{end}}
-                    </tbody>
-                </table>
+        <div class="col-md-12 column" id="app">
+            <div id="controls">
+                <button class="btn btn-primary" type="button" id="add-device-btn">Add</button>
             </div>
+
+            {{template "partial-dev-info-form" "add"}}
+
+            {{template "partial-device-list" .devices}}
         </div>
     </div>
 
-    {{template "footer"}}
+    {{template "footer" dict "e" $.e "js" (list "device-list")}}
 {{end}}
