@@ -53,3 +53,15 @@ code {
     border-radius: 0px;
     text-align: center;
 }
+
+.job-running {
+  color: green;
+}
+
+.job-idle {
+  color: blue;
+}
+
+.job-finished {
+  color: black;
+}

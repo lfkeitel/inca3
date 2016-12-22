@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 
 	"io/ioutil"
 
@@ -161,6 +162,11 @@ func (t *TypeController) ApiPutType(w http.ResponseWriter, r *http.Request, p ht
 	}
 
 	if oldType.Script != "" {
+		if exists := utils.FileExists(filepath.Join(t.e.Config.DirPaths.ScriptDir, apiType.Script)); !exists {
+			resp.Message = "Script files does not exist"
+			resp.WriteResponse(w, http.StatusBadRequest)
+			return
+		}
 		oldType.Script = apiType.Script
 	}
 

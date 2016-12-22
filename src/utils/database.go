@@ -168,6 +168,7 @@ func createJobTable(d *DatabaseAccessor) error {
 		"status" TEXT DEFAULT ('stopped'),
 		"type" TEXT DEFAULT (''),
 		"devices" TEXT NOT NULL,
+		"total" INTEGER NOT NULL DEFAULT (0),
 		"error" TEXT NOT NULL DEFAULT (''),
 		"start" INTEGER NOT NULL,
 		"end" INTEGER NOT NULL DEFAULT (0)

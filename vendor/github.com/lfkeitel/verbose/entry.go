@@ -44,6 +44,10 @@ func (e *Entry) WithFields(fields Fields) *Entry {
 // Log is the generic function to log a message with the handlers.
 // All other logging functions are simply wrappers around this.
 func (e *Entry) log(level LogLevel, msg string) {
+	if level <= e.Logger.ignore {
+		return
+	}
+
 	e.Logger.m.RLock()
 	e.Level = level
 	e.Message = msg

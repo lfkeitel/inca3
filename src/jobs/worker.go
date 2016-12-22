@@ -9,15 +9,17 @@ import (
 
 	"github.com/lfkeitel/inca3/src/models"
 	"github.com/lfkeitel/inca3/src/utils"
+	"github.com/lfkeitel/verbose"
 )
 
 type worker struct {
 	e         *utils.Environment
-	job       *models.Job
+	job       *job
 	startTime time.Time
 	cancel    chan bool
 	done      chan bool
 	errors    chan error
+	running   bool
 }
 
 func newWorker(e *utils.Environment) *worker {
@@ -35,6 +37,7 @@ func (w *worker) start() error {
 	var devices []*models.Device
 	var err error
 
+	w.e.Log.Debug("Worker: Getting devices")
 	if len(w.job.Devices) == 0 {
 		devices, err = models.GetAllDevices(w.e)
 	} else {
@@ -43,12 +46,20 @@ func (w *worker) start() error {
 
 	if err != nil {
 		w.job.Status = models.Stopped
+		w.done <- true
 		return err
 	}
 
+	w.job.Total = len(devices)
+
 	w.job.Status = models.Running
+	w.startTime = time.Now()
+	w.job.Start = w.startTime
 	go func(d []*models.Device) {
+		w.e.Log.Debug("Worker: Running job")
 		w.run(d)
+		w.e.Log.Debug("Worker: Job finished")
+		w.done <- true
 	}(devices)
 
 	return nil
@@ -56,7 +67,8 @@ func (w *worker) start() error {
 
 func (w *worker) run(devices []*models.Device) {
 	wg := NewLimitGroup(w.e.Config.Job.MaxConnections)
-	date := time.Now().Format("2006-01-02T15:03:04")
+	date := time.Now().Format("2006-01-02T15:04:05")
+
 	for _, d := range devices {
 		// Check for cancel signal; if given, break
 		select {
@@ -69,6 +81,7 @@ func (w *worker) run(devices []*models.Device) {
 		configFileDir := filepath.Join(w.e.Config.DirPaths.BaseDir, d.Address)
 		if err := os.MkdirAll(configFileDir, 0755); err != nil {
 			w.e.Log.WithField("Path", configFileDir).Error("Failed to make directories")
+			w.job.finished++
 			continue
 		}
 
@@ -77,6 +90,11 @@ func (w *worker) run(devices []*models.Device) {
 
 		wg.Add(1)
 		go func(de *models.Device, cFile string, argList []string) {
+			w.e.Log.WithFields(verbose.Fields{
+				"Address": de.Address,
+				"File":    cFile,
+				"Script":  de.Type.Script,
+			}).Debug("Worker: Running script")
 			defer wg.Done()
 			// Run job script
 			err := w.execScript(filepath.Join(w.e.Config.DirPaths.ScriptDir, de.Type.Script), argList)
@@ -96,6 +114,9 @@ func (w *worker) run(devices []*models.Device) {
 			if err := c.Save(); err != nil {
 				w.e.Log.WithField("Err", err).Error("Failed to save config")
 			}
+
+			w.e.Log.WithField("Address", de.Address).Debug("Script finished, config saved")
+			w.job.finished++
 		}(d, configFile, args)
 
 		wg.Wait()
@@ -103,6 +124,14 @@ func (w *worker) run(devices []*models.Device) {
 
 	wg.WaitAll()
 	w.job.Status = models.Finished
+	w.job.End = time.Now()
+	if err := w.job.Save(); err != nil {
+		select {
+		case w.errors <- err:
+		default:
+		}
+		w.e.Log.WithField("Err", err).Error("Failed to save job")
+	}
 }
 
 func (w *worker) getArguments(host string, filename string) []string {

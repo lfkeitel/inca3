@@ -59,6 +59,7 @@ type Logger struct {
 	name     string
 	handlers map[string]Handler
 	m        sync.RWMutex
+	ignore   LogLevel
 }
 
 // New will create a new Logger with name n. If with the same name
@@ -134,6 +135,11 @@ func (l *Logger) Close() {
 // Name returns the name of the logger
 func (l *Logger) Name() string {
 	return l.name
+}
+
+// Ignore will set the Logger to drop all log message less than or equal to the given level
+func (l *Logger) Ignore(level LogLevel) {
+	l.ignore = level
 }
 
 // Log is the generic function to log a message with the handlers.
