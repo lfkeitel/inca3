@@ -69,6 +69,7 @@ func New(n string) *Logger {
 		name:     n,
 		handlers: make(map[string]Handler),
 		m:        sync.RWMutex{},
+		ignore:   -1,
 	}
 	addLogger(l)
 	return l
