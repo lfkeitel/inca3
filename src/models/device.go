@@ -9,12 +9,12 @@ import (
 
 type Device struct {
 	e       *utils.Environment
-	ID      int      `json:"id"`
-	Slug    string   `json:"slug"`
-	Name    string   `json:"name"`
-	Address string   `json:"address"`
-	Type    *Type    `json:"type"`
-	Configs []string `json:"configs"`
+	ID      int          `json:"id"`
+	Slug    string       `json:"slug"`
+	Name    string       `json:"name"`
+	Address string       `json:"address"`
+	Profile *ConnProfile `json:"profile"`
+	Configs []string     `json:"configs"`
 }
 
 func (d *Device) Print() {
@@ -22,7 +22,7 @@ func (d *Device) Print() {
 	fmt.Printf("Slug: %s\n", d.Slug)
 	fmt.Printf("Name: %s\n", d.Name)
 	fmt.Printf("Address: %s\n", d.Address)
-	fmt.Printf("Type: %s:%s\n", d.Type.Brand, d.Type.Connection)
+	fmt.Printf("Type: %s\n", d.Profile.Name)
 }
 
 func NewDevice(e *utils.Environment) *Device {
@@ -90,7 +90,7 @@ func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([
 		if err != nil {
 			return nil, err
 		}
-		d.Type = dType
+		d.Profile = dType
 		results = append(results, d)
 	}
 	return results, nil
@@ -121,8 +121,8 @@ func (d *Device) loadConfigs() error {
 }
 
 func (d *Device) Save() error {
-	if d.Type.ID == 0 {
-		if err := d.Type.Save(); err != nil {
+	if d.Profile.ID == 0 {
+		if err := d.Profile.Save(); err != nil {
 			return err
 		}
 	}
@@ -142,7 +142,7 @@ func (d *Device) create() error {
 		d.Slug,
 		d.Name,
 		d.Address,
-		d.Type.ID,
+		d.Profile.ID,
 	)
 
 	if err != nil {
@@ -162,7 +162,7 @@ func (d *Device) update() error {
 		d.Slug,
 		d.Name,
 		d.Address,
-		d.Type.ID,
+		d.Profile.ID,
 		d.ID,
 	)
 

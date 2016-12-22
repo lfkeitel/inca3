@@ -162,7 +162,7 @@ func (d *DeviceController) ApiPostDevice(w http.ResponseWriter, r *http.Request,
 
 	postedDevice := models.NewDevice(d.e)
 
-	postedDevice.Type, err = models.GetTypeByID(d.e, apiDevice.Type.ID)
+	postedDevice.Profile, err = models.GetTypeByID(d.e, apiDevice.Profile.ID)
 	if err != nil {
 		resp.Message = "Unknown device type"
 		resp.WriteResponse(w, http.StatusBadRequest)
@@ -214,8 +214,8 @@ func (d *DeviceController) ApiPutDevice(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Copy data from api request if different
-	if apiDevice.Type.ID > 0 && apiDevice.Type.ID != originalDevice.Type.ID {
-		originalDevice.Type, err = models.GetTypeByID(d.e, apiDevice.Type.ID)
+	if apiDevice.Profile.ID > 0 && apiDevice.Profile.ID != originalDevice.Profile.ID {
+		originalDevice.Profile, err = models.GetTypeByID(d.e, apiDevice.Profile.ID)
 		if err != nil {
 			resp.Message = "Unknown device type"
 			resp.WriteResponse(w, http.StatusBadRequest)

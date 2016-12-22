@@ -109,8 +109,9 @@ func createTypeTable(d *DatabaseAccessor) error {
 		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 		"name" TEXT NOT NULL,
 		"slug" TEXT NOT NULL UNIQUE,
-		"brand" TEXT NOT NULL,
-		"connection" TEXT NOT NULL,
+		"username" TEXT NOT NULL,
+		"password" TEXT NOT NULL,
+		"enable" TEXT DEFAULT (''),
 		"script" TEXT NOT NULL
 	)`
 

@@ -5,8 +5,7 @@
             <tr>
                 <th>Name</th>
                 <th>Address</th>
-                <th>Connection</th>
-                <th>Brand</th>
+                <th>Connection Profile</th>
             </tr>
         </thead>
         <tbody>
@@ -19,10 +18,7 @@
                     {{.Address}}
                 </td>
                 <td>
-                    {{.Type.Connection}}
-                </td>
-                <td>
-                    {{.Type.Brand}}
+                    {{.Profile.Name}}
                 </td>
             </tr>
             {{end}}

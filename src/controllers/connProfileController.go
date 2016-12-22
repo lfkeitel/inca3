@@ -12,24 +12,24 @@ import (
 	"github.com/lfkeitel/inca3/src/utils"
 )
 
-var typeControllerSingle *TypeController
+var connProfileControllerSingle *ConnProfileController
 
-type TypeController struct {
+type ConnProfileController struct {
 	e *utils.Environment
 }
 
-func newTypeController(e *utils.Environment) *TypeController {
-	return &TypeController{e: e}
+func newConnProfileController(e *utils.Environment) *ConnProfileController {
+	return &ConnProfileController{e: e}
 }
 
-func GetTypeController(e *utils.Environment) *TypeController {
-	if typeControllerSingle == nil {
-		typeControllerSingle = newTypeController(e)
+func GetConnProfileController(e *utils.Environment) *ConnProfileController {
+	if connProfileControllerSingle == nil {
+		connProfileControllerSingle = newConnProfileController(e)
 	}
-	return typeControllerSingle
+	return connProfileControllerSingle
 }
 
-func (t *TypeController) ShowTypeList(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (t *ConnProfileController) ShowTypeList(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	types, err := models.GetAllTypes(t.e)
 	if err != nil {
 		t.e.Log.WithField("Err", err).Error("Failed getting device types")
@@ -42,7 +42,7 @@ func (t *TypeController) ShowTypeList(w http.ResponseWriter, r *http.Request, _ 
 	t.e.View.NewView("type-list", r).Render(w, data)
 }
 
-func (t *TypeController) ShowType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (t *ConnProfileController) ShowType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	slug := p.ByName("slug")
 
 	if slug == "" {
@@ -63,7 +63,7 @@ func (t *TypeController) ShowType(w http.ResponseWriter, r *http.Request, p http
 	t.e.View.NewView("type", r).Render(w, data)
 }
 
-func (t *TypeController) ApiGetTypes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (t *ConnProfileController) ApiGetTypes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	resp := utils.NewAPIResponse("", nil)
 	slug := p.ByName("slug")
 
@@ -115,7 +115,7 @@ func (t *TypeController) ApiGetTypes(w http.ResponseWriter, r *http.Request, p h
 	resp.WriteResponse(w, http.StatusOK)
 }
 
-func (t *TypeController) ApiPutType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (t *ConnProfileController) ApiPutType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	slug := p.ByName("slug")
 	resp := utils.NewAPIResponse("", nil)
 
@@ -126,7 +126,7 @@ func (t *TypeController) ApiPutType(w http.ResponseWriter, r *http.Request, p ht
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var apiType *models.Type
+	var apiType *models.ConnProfile
 	if err := decoder.Decode(&apiType); err != nil {
 		resp.Message = "Invalid JSON"
 		t.e.Log.WithField("Err", err).Error("Invalid JSON")
@@ -153,12 +153,16 @@ func (t *TypeController) ApiPutType(w http.ResponseWriter, r *http.Request, p ht
 		oldType.Name = apiType.Name
 	}
 
-	if oldType.Brand != "" {
-		oldType.Brand = apiType.Brand
+	if oldType.Username != "" {
+		oldType.Username = apiType.Username
 	}
 
-	if oldType.Connection != "" {
-		oldType.Connection = apiType.Connection
+	if oldType.Password != "" {
+		oldType.Password = apiType.Password
+	}
+
+	if oldType.EnablePW != "" {
+		oldType.EnablePW = apiType.EnablePW
 	}
 
 	if oldType.Script != "" {
@@ -182,11 +186,11 @@ func (t *TypeController) ApiPutType(w http.ResponseWriter, r *http.Request, p ht
 	resp.WriteResponse(w, http.StatusOK)
 }
 
-func (t *TypeController) ApiPostType(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (t *ConnProfileController) ApiPostType(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	decoder := json.NewDecoder(r.Body)
 
 	resp := utils.NewAPIResponse("", nil)
-	var apiType *models.Type
+	var apiType *models.ConnProfile
 	if err := decoder.Decode(&apiType); err != nil {
 		resp.Message = "Invalid JSON"
 		t.e.Log.WithField("Err", err).Error("Invalid JSON")
@@ -198,8 +202,9 @@ func (t *TypeController) ApiPostType(w http.ResponseWriter, r *http.Request, _ h
 	postedType := models.NewType(t.e)
 
 	postedType.Name = apiType.Name
-	postedType.Brand = apiType.Brand
-	postedType.Connection = apiType.Connection
+	postedType.Username = apiType.Username
+	postedType.Password = apiType.Password
+	postedType.EnablePW = apiType.EnablePW
 	postedType.Script = apiType.Script
 
 	if err := postedType.Save(); err != nil {
@@ -214,7 +219,7 @@ func (t *TypeController) ApiPostType(w http.ResponseWriter, r *http.Request, _ h
 	resp.WriteResponse(w, http.StatusOK)
 }
 
-func (t *TypeController) ApiDeleteType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (t *ConnProfileController) ApiDeleteType(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	slug := p.ByName("slug")
 
 	ret := utils.NewAPIResponse("", nil)

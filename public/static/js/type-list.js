@@ -16,8 +16,9 @@
     function saveType() {
         var t = {
             name: $('#type-name').val(),
-            brand: $('#type-brand').val(),
-            connection: $('#type-connection').val(),
+            username: $('#type-username').val(),
+            password: $('#type-password').val(),
+            enablepw: $('#type-enablepw').val(),
             script: $('#type-script').val()
         };
 
@@ -32,8 +33,9 @@
 
     function clearTypeForm() {
         $('#type-name').val("");
-        $('#type-brand').val("");
-        $('#type-connection')[0].selectedIndex = 0;
+        $('#type-username').val('');
+        $('#type-password').val('');
+        $('#type-enablepw').val('');
         $('#type-script')[0].selectedIndex = 0;
     }
 

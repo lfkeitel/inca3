@@ -17,7 +17,7 @@
         var d = {
             name: $('#device-name').val(),
             address: $('#device-addr').val(),
-            type: { id: Number($('#device-type').val()) }
+            profile: { id: Number($('#device-type').val()) }
         };
 
         API.createDevice(d, function(data) {

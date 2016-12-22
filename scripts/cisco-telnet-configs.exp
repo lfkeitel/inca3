@@ -5,38 +5,50 @@ set hostname $::env(INCA_ADDRESS)
 set username $::env(INCA_REMOTE_USERNAME)
 set password $::env(INCA_REMOTE_PASSWORD)
 set confFileName $::env(INCA_OUTPUT_FILE)
+set enablepassword $::env(INCA_ENABLE_PASSWORD)
 
 # Announce which device we are working on and at what time
 send_user "\n"
 send_user ">>>>>  Working on $hostname @ [exec date] <<<<<\n"
 send_user "\n"
 
-# Don't check keys
-spawn ssh -o StrictHostKeyChecking=no $username\@$hostname
+# Start telnet session
+spawn telnet $hostname
 
 # Allow this script to handle ssh connection issues
 expect {
     timeout { send_user "\nTimeout Exceeded - Check Host\n"; exit 1 }
-    eof { send_user "\nSSH Connection To $hostname Failed\n"; exit 1 }
-    "*yes/no*" {
-        send "yes\n"
+    eof { send_user "\nTelnet Connection To $hostname Failed\n"; exit 1 }
+    "*sername:" {
+        send "$username\n"
     }
-    "*>" {}
+}
+
+expect {
     "*assword:" {
         send "$password\n"
     }
 }
 
-expect ">"
-send "configure\n"
+# If we're not already in enable mode, get us there
+expect {
+    default { send_user "\nEnable Mode Failed - Check Password\n"; exit 1 }
+    "*#" {}
+    "*>" {
+        send "enable\n"
+        expect "*assword"
+        send "$enablepassword\n"
+        expect "*#"
+    }
+}
+
+send "terminal length 0\n"
 expect "#"
 
 log_file -noappend $confFileName
-send "show | display set | no-more\n"
-expect "*#"
+send "show running-config\n"
+expect "#"
 log_file
 
-send "exit\n"
-expect "*>"
 send "exit\n"
 exit

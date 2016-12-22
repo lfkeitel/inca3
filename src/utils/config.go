@@ -41,9 +41,6 @@ type Config struct {
 	}
 	Job struct {
 		MaxConnections int32
-		RemoteUsername string
-		RemotePassword string
-		EnablePassword string
 	}
 	DirPaths struct {
 		BaseDir   string

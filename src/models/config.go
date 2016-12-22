@@ -67,6 +67,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 	}
 	defer rows.Close()
 
+	var cleanUpConfigs []*Config
 	var results []*Config
 	for rows.Next() {
 		c := NewConfig(e)
@@ -85,11 +86,13 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 
 		f := filepath.Join(e.Config.DirPaths.BaseDir, c.Filename)
 		if !utils.FileExists(f) {
+			cleanUpConfigs = append(cleanUpConfigs, c)
 			continue
 		}
 
 		fileInto, err := os.Stat(f)
 		if err != nil {
+			e.Log.WithField("File", f).Warning("Config file not readable")
 			continue
 		}
 
@@ -97,6 +100,17 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 		c.Created = time.Unix(created, 0)
 		results = append(results, c)
 	}
+
+	rows.Close()
+
+	for _, c := range cleanUpConfigs {
+		f := filepath.Join(e.Config.DirPaths.BaseDir, c.Filename)
+		e.Log.WithField("File", f).Warning("Config file doesn't exist, removing from database")
+		if err := c.Delete(); err != nil {
+			e.Log.WithField("Err", err).Error("Failed to delete config from database")
+		}
+	}
+
 	return results, nil
 }
 
@@ -146,12 +160,6 @@ func (c *Config) getText() ([]byte, error) {
 	return ioutil.ReadAll(reader)
 }
 
-func (c *Config) Delete() error {
-	sql := `DELETE FROM "config" WHERE "id" = ?`
-	_, err := c.e.DB.Exec(sql, c.ID)
-	return err
-}
-
 func (c *Config) Save() error {
 	if c.ID == 0 {
 		return c.create()
@@ -193,4 +201,19 @@ func (c *Config) update() error {
 		c.ID,
 	)
 	return err
+}
+
+func (c *Config) Delete() error {
+	// Delete the database record
+	sql := `DELETE FROM "config" WHERE "id" = ?`
+	if _, err := c.e.DB.Exec(sql, c.ID); err != nil {
+		return err
+	}
+
+	// Delete the file
+	f := filepath.Join(c.e.Config.DirPaths.BaseDir, c.Filename)
+	if utils.FileExists(f) {
+		return os.Remove(f)
+	}
+	return nil
 }

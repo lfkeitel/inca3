@@ -7,6 +7,9 @@ import (
 
 	"path/filepath"
 
+	"compress/gzip"
+	"io/ioutil"
+
 	"github.com/lfkeitel/inca3/src/models"
 	"github.com/lfkeitel/inca3/src/utils"
 	"github.com/lfkeitel/verbose"
@@ -86,30 +89,42 @@ func (w *worker) run(devices []*models.Device) {
 		}
 
 		configFile := filepath.Join(configFileDir, date+".conf")
-		args := w.getArguments(d.Address, configFile)
+		args := w.getArguments(d, configFile)
 
 		wg.Add(1)
 		go func(de *models.Device, cFile string, argList []string) {
 			w.e.Log.WithFields(verbose.Fields{
 				"Address": de.Address,
 				"File":    cFile,
-				"Script":  de.Type.Script,
+				"Script":  de.Profile.Script,
 			}).Debug("Worker: Running script")
 			defer wg.Done()
 			// Run job script
-			err := w.execScript(filepath.Join(w.e.Config.DirPaths.ScriptDir, de.Type.Script), argList)
+			err := w.execScript(filepath.Join(w.e.Config.DirPaths.ScriptDir, de.Profile.Script), argList)
 			if err != nil {
 				w.e.Log.WithField("Err", err).Error("Failed to get config")
 				return
 			}
 
+			// Compress file
+			originalFile, _ := ioutil.ReadFile(cFile)
+			compressedFile, _ := os.OpenFile(cFile+".gz", os.O_CREATE|os.O_WRONLY, 0644)
+
+			gzWriter := gzip.NewWriter(compressedFile)
+			gzWriter.Write(originalFile)
+			gzWriter.Close()
+
+			compressedFile.Close()
+
+			os.Remove(cFile)
+
 			// Build a configuration entry
 			c := models.NewConfig(w.e)
 			c.Slug = de.Slug + "_" + date
 			c.DeviceID = de.ID
-			c.Filename = filepath.Join(de.Address, date+".conf")
+			c.Filename = filepath.Join(de.Address, date+".conf.gz")
 			c.Created = time.Now()
-			c.Compressed = false
+			c.Compressed = true
 
 			if err := c.Save(); err != nil {
 				w.e.Log.WithField("Err", err).Error("Failed to save config")
@@ -134,22 +149,31 @@ func (w *worker) run(devices []*models.Device) {
 	}
 }
 
-func (w *worker) getArguments(host string, filename string) []string {
+func (w *worker) getArguments(device *models.Device, filename string) []string {
 	return []string{
-		host,
-		w.e.Config.Job.RemoteUsername,
-		w.e.Config.Job.RemotePassword,
-		filename,
-		w.e.Config.Job.EnablePassword,
+		"INCA_ADDRESS=" + device.Address,
+		"INCA_REMOTE_USERNAME=" + device.Profile.Username,
+		"INCA_REMOTE_PASSWORD=" + device.Profile.Password,
+		"INCA_OUTPUT_FILE=" + filename,
+		"INCA_ENABLE_PASSWORD=" + device.Profile.EnablePW,
 	}
 }
 
 func (w *worker) execScript(sfn string, args []string) error {
-	_, err := exec.Command(sfn, args...).Output()
+	cmd := exec.Command(sfn)
+
+	env := os.Environ()
+	env = append(env, args...)
+	cmd.Env = env
+
+	out, err := cmd.Output()
 	if err != nil {
 		w.e.Log.WithField("Err", err).Error()
 		return err
 	}
-	//stdOutLogger.Info(string(out))
+
+	if len(out) > 0 {
+		w.e.Log.WithField("Out", string(out)).Debug("Script output")
+	}
 	return nil
 }

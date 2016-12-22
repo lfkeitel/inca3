@@ -24,7 +24,7 @@
             name: $('#device-name').val(),
             address: $('#device-addr').val(),
             slug: thisDevice.slug,
-            type: { id: Number($('#device-type').val()) }
+            profile: { id: Number($('#device-type').val()) }
         };
 
         API.saveDevice(d, function(data) {
@@ -49,7 +49,7 @@
     function populateEditForm() {
         $('#device-name').val(thisDevice.name);
         $('#device-addr').val(thisDevice.address);
-        $('#device-type').val(String(thisDevice.type.id))
+        $('#device-type').val(String(thisDevice.profile.id))
     }
 
     function populateTypes(callback) {

@@ -3,7 +3,7 @@
 
     function bindUIButtons() {
         $('#cancel-edit-btn').click(function() {
-            window.location = "/types";
+            window.location = "/profiles";
         });
 
         $('#delete-type-btn').click(function() {
@@ -19,14 +19,16 @@
         var t = {
             slug: thisType.slug,
             name: $('#type-name').val(),
-            brand: $('#type-brand').val(),
-            connection: $('#type-connection').val(),
+            username: $('#type-username').val(),
+            password: $('#type-password').val(),
+            enablepw: $('#type-enablepw').val(),
             script: $('#type-script').val()
         };
 
         API.saveType(t, function(data) {
             flashes.add("success", "Device type saved");
-            window.location = "/types";
+            console.log(data);
+            window.location = "/profiles";
         }, function(resp) {
             var json = resp.responseJSON;
             toastr["error"](json.message);
@@ -39,8 +41,9 @@
 
     function populateEditForm() {
         $('#type-name').val(thisType.name);
-        $('#type-brand').val(thisType.brand);
-        $('#type-connection').val(thisType.connection);
+        $('#type-username').val(thisType.username);
+        $('#type-password').val(thisType.password);
+        $('#type-enablepw').val(thisType.enablepw);
         $('#type-script').val(thisType.script);
     }
 
@@ -70,7 +73,7 @@
         confirm.show("Are you sure you want to delete this type?", function() {
             API.deleteType(thisType.slug, function() {
                 flashes.add('success', "Type deleted");
-                window.location = "/types";
+                window.location = "/profiles";
                 return
             }, function(resp) {
                 toastr["error"](resp.responseJSON.message);

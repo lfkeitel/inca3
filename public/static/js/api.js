@@ -43,26 +43,26 @@
 
     // Type APIs
     API.prototype.getAllTypes = function(ok, fail) {
-        $.getJSON("/api/types").done(ok).fail(fail);
+        $.getJSON("/api/profiles").done(ok).fail(fail);
     }
 
     API.prototype.getTypeScripts = function(ok, fail) {
-        $.getJSON("/api/types/_scripts").done(ok).fail(fail);
+        $.getJSON("/api/profiles/_scripts").done(ok).fail(fail);
     }
 
     API.prototype.createType = function(type, ok, fail) {
         var json = JSON.stringify(type);
-        makeRequest("POST", "/api/types", json, ok, fail);
+        makeRequest("POST", "/api/profiles", json, ok, fail);
     }
 
     API.prototype.saveType = function(type, ok, fail) {
         var json = JSON.stringify(type);
-        makeRequest("PUT", "/api/types/" + type.slug, json, ok, fail);
+        makeRequest("PUT", "/api/profiles/" + type.slug, json, ok, fail);
     }
 
     API.prototype.deleteType = function(slug, ok, fail) {
         slug = encodeURIComponent(slug);
-        makeRequest("DELETE", "/api/types/" + slug, "", ok, fail);
+        makeRequest("DELETE", "/api/profiles/" + slug, "", ok, fail);
     }
 
     // Job APIs
