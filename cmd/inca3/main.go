@@ -67,7 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	e.Log = utils.NewLogger(e.Config)
+	e.Log = utils.NewLogger(e.Config, "inca")
 	e.Log.WithFields(verbose.Fields{
 		"path": configFile,
 	}).Info("Loaded configuration")

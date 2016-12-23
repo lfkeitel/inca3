@@ -4,8 +4,6 @@
 
 package utils
 
-import "github.com/lfkeitel/verbose"
-
 // EnvType is the runtime state of the application
 type EnvType string
 
@@ -23,7 +21,7 @@ const (
 type Environment struct {
 	Config *Config
 	DB     *DatabaseAccessor
-	Log    *verbose.Logger
+	Log    *Logger
 	Env    EnvType
 	View   *Views
 }
@@ -35,11 +33,4 @@ func NewEnvironment(e EnvType) *Environment {
 
 func (e *Environment) IsDev() bool {
 	return e.Env == EnvDev
-}
-
-// NewLogger will create a new logging object based in the given configuration.
-func NewLogger(c *Config) *verbose.Logger {
-	l := verbose.New("")
-	l.AddHandler("stdout", verbose.NewStdoutHandler(true))
-	return l
 }
