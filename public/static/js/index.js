@@ -43,9 +43,9 @@
             }
 
             var statusLabel = $('#current-status');
-            statusLabel.text("Finished");
+            statusLabel.text("Idle");
             statusLabel.removeClass();
-            statusLabel.addClass('job-finished');
+            statusLabel.addClass('job-idle');
 
             progress.removeClass('active');
             progress.removeClass('progress-bar-striped');

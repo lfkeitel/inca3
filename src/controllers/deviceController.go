@@ -26,12 +26,7 @@ func GetDeviceController(e *utils.Environment) *DeviceController {
 	return deviceControllerSingle
 }
 
-func (d *DeviceController) ShowDevice(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	if p.ByName("slug") != "" {
-		d.showDeviceConfigList(w, r, p.ByName("slug"))
-		return
-	}
-
+func (d *DeviceController) ShowDeviceList(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	devices, err := models.GetAllDevices(d.e)
 	if err != nil {
 		d.e.Log.WithField("Err", err).Error("Failed to get devices")
@@ -43,78 +38,6 @@ func (d *DeviceController) ShowDevice(w http.ResponseWriter, r *http.Request, p 
 	}
 	d.e.View.NewView("device-list", r).Render(w, data)
 	return
-}
-
-func (d *DeviceController) showDeviceConfigList(w http.ResponseWriter, r *http.Request, slug string) {
-	device, err := models.GetDeviceBySlug(d.e, slug)
-	if err != nil {
-		d.e.Log.WithField("Err", err).Error("Failed to get device")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if device.ID == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	configs, err := models.GetConfigsForDevice(d.e, device.ID)
-	if err != nil {
-		d.e.Log.WithField("Err", err).Error("Failed to get configs")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"device":  device,
-		"configs": configs,
-	}
-	d.e.View.NewView("device", r).Render(w, data)
-}
-
-func (d *DeviceController) ShowConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	name := p.ByName("slug")
-	configSlug := p.ByName("config")
-
-	if configSlug == "" {
-		d.showDeviceConfigList(w, r, name)
-		return
-	}
-
-	device, err := models.GetDeviceBySlug(d.e, name)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get device")
-		return
-	}
-
-	if device.ID == 0 {
-		d.e.Log.Debug("Device not found")
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	config, err := models.GetConfigBySlug(d.e, configSlug)
-	if err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get config")
-		return
-	}
-
-	if config.ID == 0 {
-		d.e.Log.Debug("Config not found")
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	if err := config.LoadText(); err != nil {
-		d.e.Log.WithField("error", err).Error("Couldn't get config text")
-		return
-	}
-
-	data := map[string]interface{}{
-		"device": device,
-		"config": config,
-	}
-	d.e.View.NewView("config", r).Render(w, data)
 }
 
 func (d *DeviceController) ApiGetDevices(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

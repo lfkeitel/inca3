@@ -59,9 +59,5 @@ code {
 }
 
 .job-idle {
-  color: blue;
-}
-
-.job-finished {
   color: black;
 }

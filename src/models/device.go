@@ -40,7 +40,7 @@ func GetDeviceByID(e *utils.Environment, id int) (*Device, error) {
 	}
 
 	if len(devices) == 0 {
-		return NewDevice(e), nil
+		return nil, nil
 	}
 	return devices[0], nil
 }
@@ -52,7 +52,7 @@ func GetDeviceBySlug(e *utils.Environment, name string) (*Device, error) {
 	}
 
 	if len(devices) == 0 {
-		return NewDevice(e), nil
+		return nil, nil
 	}
 	return devices[0], nil
 }

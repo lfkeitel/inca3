@@ -12,7 +12,7 @@
             </thead>
             <tbody>
                 {{range .configs}}
-                <tr class="clickable-row" data-href="devices/{{$.device.Slug}}/{{.Slug}}">
+                <tr class="clickable-row" data-href="configs/{{.Slug}}">
                     <td>{{.Created.Format "01/02/2006 15:04:05"}}</td>
                     <td>{{.Slug}}</td>
                     <td>{{.Failed}}</td>

@@ -14,9 +14,12 @@ func LoadRoutes(e *utils.Environment) http.Handler {
 	r.Handler("GET", "/", rootHandler(e))
 
 	d := controllers.GetDeviceController(e)
-	r.GET("/devices", d.ShowDevice)
-	r.GET("/devices/:slug", d.ShowDevice)
-	r.GET("/devices/:slug/:config", d.ShowConfig)
+	r.GET("/devices", d.ShowDeviceList)
+
+	c := controllers.GetConfigController(e)
+	r.GET("/devices/:slug", c.ShowDeviceConfigList)
+	r.GET("/devices/:slug/:config", c.ShowConfig)
+	r.GET("/configs/:config", c.ShowConfig)
 
 	t := controllers.GetConnProfileController(e)
 	r.GET("/profiles", t.ShowTypeList)
