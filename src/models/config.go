@@ -22,6 +22,7 @@ type Config struct {
 	Compressed bool      `json:"compressed"`
 	Size       int64     `json:"size"`
 	Text       string    `json:"body"`
+	Failed     bool      `json:"failed"`
 }
 
 func NewConfig(e *utils.Environment) *Config {
@@ -59,7 +60,7 @@ func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 }
 
 func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([]*Config, error) {
-	sql := `SELECT "id", "slug", "device", "created", "filename", "compressed" FROM "config" ` + where
+	sql := `SELECT "id", "slug", "device", "created", "filename", "compressed", "failed" FROM "config" ` + where
 
 	rows, err := e.DB.Query(sql, values...)
 	if err != nil {
@@ -79,6 +80,7 @@ func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([
 			&created,
 			&c.Filename,
 			&c.Compressed,
+			&c.Failed,
 		)
 		if err != nil {
 			continue
@@ -168,7 +170,7 @@ func (c *Config) Save() error {
 }
 
 func (c *Config) create() error {
-	sql := `INSERT INTO "config" ("slug", "device", "created", "filename", "compressed") VALUES (?,?,?,?,?)`
+	sql := `INSERT INTO "config" ("slug", "device", "created", "filename", "compressed", "failed") VALUES (?,?,?,?,?,?)`
 
 	result, err := c.e.DB.Exec(
 		sql,
@@ -177,6 +179,7 @@ func (c *Config) create() error {
 		c.Created.Unix(),
 		c.Filename,
 		c.Compressed,
+		c.Failed,
 	)
 
 	if err != nil {
@@ -189,7 +192,7 @@ func (c *Config) create() error {
 }
 
 func (c *Config) update() error {
-	sql := `UPDATE "config" SET "slug" = ?, "device" = ?, "created" = ?, "filename" = ?, "compressed" = ? WHERE "id" = ?`
+	sql := `UPDATE "config" SET "slug" = ?, "device" = ?, "created" = ?, "filename" = ?, "compressed" = ?, "failed" = ? WHERE "id" = ?`
 
 	_, err := c.e.DB.Exec(
 		sql,
@@ -198,6 +201,7 @@ func (c *Config) update() error {
 		c.Created.Unix(),
 		c.Filename,
 		c.Compressed,
+		c.Failed,
 		c.ID,
 	)
 	return err
