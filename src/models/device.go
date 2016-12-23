@@ -59,7 +59,12 @@ func GetDeviceBySlug(e *utils.Environment, name string) (*Device, error) {
 
 func GetDevicesByIDs(e *utils.Environment, ids []int) ([]*Device, error) {
 	sql := "WHERE " + strings.Repeat(`"id" = ? OR `, len(ids))
-	return doDeviceQuery(e, sql[:len(sql)-5], ids)
+	idsInterfaces := make([]interface{}, len(ids), len(ids))
+	for i, id := range ids {
+		idsInterfaces[i] = id
+	}
+	sql = sql[:len(sql)-4]
+	return doDeviceQuery(e, sql, idsInterfaces...)
 }
 
 func doDeviceQuery(e *utils.Environment, where string, values ...interface{}) ([]*Device, error) {

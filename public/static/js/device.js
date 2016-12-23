@@ -17,6 +17,39 @@
         $('#save-create-btn').click(function() {
             saveDevice();
         });
+
+        $('#get-config-btn').click(function() {
+            getConfig();
+        });
+    }
+
+    function getConfig() {
+        var spec = {
+            type: "configs",
+            devices: [thisDevice.id],
+            start: 0
+        }
+
+        API.startJob(spec, function(data) {
+            toastr["success"]("Archive job started");
+            startStatusChecker(data.data.id);
+        }, function(resp) {
+            toastr["error"](resp.responseJSON.message);
+        });
+    }
+
+    function startStatusChecker(id) {
+        API.jobStatus(id, function(data) {
+            if (data.data.completed < data.data.total) {
+                setTimeout(function() { startStatusChecker(id); }, 3000);
+                return
+            }
+
+            flashes.add("success", "Archive job finished");
+            w.location.reload();
+        }, function(resp) {
+            toastr["error"](resp.responseJSON.message);
+        });
     }
 
     function saveDevice() {
