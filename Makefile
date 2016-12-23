@@ -13,7 +13,7 @@ LDFLAGS := -X 'main.version=$(VERSION)' \
 			-X 'main.builder=$(BUILDER)' \
 			-X 'main.goversion=$(GOVERSION)'
 
-.PHONY: all doc fmt alltests test coverage benchmark lint vet build
+.PHONY: all doc fmt alltests test coverage benchmark lint vet build dist
 
 all: test build
 
@@ -46,3 +46,19 @@ vet:
 
 build:
 	GOBIN=$(PWD)/bin go install -v -ldflags "$(LDFLAGS)" ./cmd/inca3
+
+dist: vet all
+	@rm -rf ./dist
+	@mkdir -p dist/inca
+	@cp -R public dist/inca/
+	@cp -R scripts dist/inca/
+
+	@cp LICENSE dist/inca/
+	@cp README.md dist/inca/
+
+	@mkdir dist/inca/bin
+	@cp bin/inca3 dist/inca/bin/inca
+
+	(cd "dist"; tar -cz inca) > "dist/inca-dist-$(VERSION).tar.gz"
+
+	@rm -rf dist/inca

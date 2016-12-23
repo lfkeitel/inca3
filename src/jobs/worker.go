@@ -99,11 +99,13 @@ func (w *worker) run(devices []*models.Device) {
 				"Script":  de.Profile.Script,
 			}).Debug("Worker: Running script")
 			defer wg.Done()
+			c := models.NewConfig(w.e)
+
 			// Run job script
 			err := w.execScript(filepath.Join(w.e.Config.DirPaths.ScriptDir, de.Profile.Script), argList)
 			if err != nil {
-				w.e.Log.WithField("Err", err).Error("Failed to get config")
-				return
+				w.e.Log.WithField("Err", err).Error("Error getting config")
+				c.Failed = true
 			}
 
 			// Compress file
@@ -119,7 +121,6 @@ func (w *worker) run(devices []*models.Device) {
 			os.Remove(cFile)
 
 			// Build a configuration entry
-			c := models.NewConfig(w.e)
 			c.Slug = de.Slug + "_" + date
 			c.DeviceID = de.ID
 			c.Filename = filepath.Join(de.Address, date+".conf.gz")
@@ -167,13 +168,14 @@ func (w *worker) execScript(sfn string, args []string) error {
 	cmd.Env = env
 
 	out, err := cmd.Output()
-	if err != nil {
-		w.e.Log.WithField("Err", err).Error()
-		return err
-	}
 
 	if len(out) > 0 {
 		w.e.Log.WithField("Out", string(out)).Debug("Script output")
+	}
+
+	if err != nil {
+		w.e.Log.WithField("Err", err).Error()
+		return err
 	}
 	return nil
 }

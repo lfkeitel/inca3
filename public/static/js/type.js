@@ -28,7 +28,7 @@
         API.saveType(t, function(data) {
             flashes.add("success", "Device type saved");
             console.log(data);
-            window.location = "/profiles";
+            window.location = "profiles";
         }, function(resp) {
             var json = resp.responseJSON;
             toastr["error"](json.message);
@@ -73,7 +73,7 @@
         confirm.show("Are you sure you want to delete this type?", function() {
             API.deleteType(thisType.slug, function() {
                 flashes.add('success', "Type deleted");
-                window.location = "/profiles";
+                window.location = "profiles";
                 return
             }, function(resp) {
                 toastr["error"](resp.responseJSON.message);

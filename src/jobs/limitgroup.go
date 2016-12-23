@@ -37,7 +37,7 @@ func (c *LimitGroup) Add(delta int) {
 }
 
 func (c *LimitGroup) add(delta int) {
-	c.current = atomic.AddInt32(&c.current, int32(delta))
+	atomic.AddInt32(&c.current, int32(delta))
 	c.wg.Add(delta)
 }
 

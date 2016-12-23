@@ -126,7 +126,8 @@ func createConfigTable(d *DatabaseAccessor) error {
 		"device" INTEGER NOT NULL,
 		"created" INTEGER NOT NULL,
 		"filename" TEXT NOT NULL,
-		"compressed" INT DEFAULT 0
+		"compressed" INTEGER DEFAULT 0,
+		"failed" INTEGER DEFAULT 0
 	)`
 
 	_, err := d.DB.Exec(sql)

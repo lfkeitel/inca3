@@ -30,7 +30,7 @@ func NewDevice(e *utils.Environment) *Device {
 }
 
 func GetAllDevices(e *utils.Environment) ([]*Device, error) {
-	return doDeviceQuery(e, "", nil)
+	return doDeviceQuery(e, `ORDER BY "name" ASC`, nil)
 }
 
 func GetDeviceByID(e *utils.Environment, id int) (*Device, error) {

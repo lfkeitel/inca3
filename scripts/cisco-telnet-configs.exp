@@ -1,5 +1,7 @@
 #!/usr/bin/expect -f
 
+log_user 0
+
 # Set variables
 set hostname $::env(INCA_ADDRESS)
 set username $::env(INCA_REMOTE_USERNAME)
@@ -7,10 +9,7 @@ set password $::env(INCA_REMOTE_PASSWORD)
 set confFileName $::env(INCA_OUTPUT_FILE)
 set enablepassword $::env(INCA_ENABLE_PASSWORD)
 
-# Announce which device we are working on and at what time
-send_user "\n"
-send_user ">>>>>  Working on $hostname @ [exec date] <<<<<\n"
-send_user "\n"
+log_file -noappend -a $confFileName
 
 # Start telnet session
 spawn telnet $hostname
@@ -45,9 +44,9 @@ expect {
 send "terminal length 0\n"
 expect "#"
 
-log_file -noappend $confFileName
 send "show running-config\n"
 expect "#"
+
 log_file
 
 send "exit\n"

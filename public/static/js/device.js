@@ -30,7 +30,7 @@
         API.saveDevice(d, function(data) {
             if (data.data.slug !== thisDevice.slug) {
                 flashes.add("success", "Device saved");
-                window.location = "/devices/" + data.data.slug;
+                window.location = "devices/" + data.data.slug;
                 return;
             }
             thisDevice = data.data;
@@ -78,7 +78,7 @@
         confirm.show("Are you sure you want to delete this device?<br>This will also delete configurations for this device", function() {
             API.deleteDevice(thisDevice.slug, function() {
                 flashes.add('success', "Device deleted");
-                window.location = "/devices";
+                window.location = "devices";
                 return
             }, function(resp) {
                 toastr["error"](resp.responseJSON.message);

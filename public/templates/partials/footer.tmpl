@@ -7,18 +7,18 @@
     </footer>
 
     {{/* Vendor scripts */}}
-    <script type="text/javascript" src="/static/js/vendor/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/js/vendor/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/static/js/vendor/toastr.min.js"></script>
-    <script type="text/javascript" src="/static/js/vendor/js-modals.js"></script>
+    <script type="text/javascript" src="static/js/vendor/jquery.min.js"></script>
+    <script type="text/javascript" src="static/js/vendor/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/vendor/toastr.min.js"></script>
+    <script type="text/javascript" src="static/js/vendor/js-modals.js"></script>
 
     {{/* Common site scripts */}}
-    <script type="text/javascript" src="/static/js/api.js"></script>
-    <script type="text/javascript" src="/static/js/common.js"></script>
+    <script type="text/javascript" src="static/js/api.js"></script>
+    <script type="text/javascript" src="static/js/common.js"></script>
 
     {{/* Page specific site scripts */}}
     {{range .js}}
-    <script type="text/javascript" src="/static/js/{{.}}.js"></script>
+    <script type="text/javascript" src="static/js/{{.}}.js"></script>
     {{end}}
 </body>
 </html>

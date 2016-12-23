@@ -13,6 +13,9 @@
             jobID = data.data.id;
 
             var progress = $('#status-progress-bar');
+            progress.prop('aria-valuemax', 0);
+            progress.prop('aria-valuenow', 0);
+            progress.css('width', '0%')
             progress.addClass('active');
             progress.addClass('progress-bar-striped');
 

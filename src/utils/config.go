@@ -19,6 +19,7 @@ type Config struct {
 		SiteTitle          string
 		SiteCompanyName    string
 		SiteDomainName     string
+		SiteBasePath       string
 		SiteFooterText     string
 		JobSchedulerWakeUp string
 	}
@@ -99,5 +100,12 @@ func NewConfig(configFile string) (conf *Config, err error) {
 		return nil, err
 	}
 	con.sourceFile = configFile
+
+	if con.Core.SiteBasePath == "" {
+		con.Core.SiteBasePath = "/"
+	} else if con.Core.SiteBasePath[len(con.Core.SiteBasePath)-1] != '/' {
+		con.Core.SiteBasePath = con.Core.SiteBasePath + "/"
+	}
+
 	return &con, nil
 }

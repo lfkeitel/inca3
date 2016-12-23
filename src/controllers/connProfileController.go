@@ -46,14 +46,14 @@ func (t *ConnProfileController) ShowType(w http.ResponseWriter, r *http.Request,
 	slug := p.ByName("slug")
 
 	if slug == "" {
-		http.Redirect(w, r, "/types", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, t.e.Config.Core.SiteBasePath+"/types", http.StatusTemporaryRedirect)
 		return
 	}
 
 	dType, err := models.GetTypeBySlug(t.e, slug)
 	if err != nil {
 		t.e.Log.WithField("Err", err).Error()
-		http.Redirect(w, r, "/types", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, t.e.Config.Core.SiteBasePath+"/types", http.StatusTemporaryRedirect)
 		return
 	}
 
