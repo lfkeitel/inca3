@@ -3,7 +3,7 @@
 
     function bindUIButtons() {
         $('#cancel-edit-btn').click(function() {
-            window.location = "/profiles";
+            window.location = "profiles";
         });
 
         $('#delete-type-btn').click(function() {
