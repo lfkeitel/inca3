@@ -46,6 +46,7 @@ vet:
 
 build:
 	GOBIN=$(PWD)/bin go install -v -ldflags "$(LDFLAGS)" ./cmd/inca3
+	GOBIN=$(PWD)/bin go install -v -ldflags "$(LDFLAGS)" ./cmd/inca-fix
 
 dist: vet all
 	@rm -rf ./dist

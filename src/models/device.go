@@ -57,6 +57,18 @@ func GetDeviceBySlug(e *utils.Environment, name string) (*Device, error) {
 	return devices[0], nil
 }
 
+func GetDeviceByIP(e *utils.Environment, ip string) (*Device, error) {
+	devices, err := doDeviceQuery(e, `WHERE "address" = ?`, ip)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(devices) == 0 {
+		return nil, nil
+	}
+	return devices[0], nil
+}
+
 func GetDevicesByIDs(e *utils.Environment, ids []int) ([]*Device, error) {
 	sql := "WHERE " + strings.Repeat(`"id" = ? OR `, len(ids))
 	idsInterfaces := make([]interface{}, len(ids), len(ids))

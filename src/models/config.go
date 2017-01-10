@@ -59,6 +59,17 @@ func GetConfigByID(e *utils.Environment, id string) (*Config, error) {
 	return configs[0], nil
 }
 
+func GetConfigByFilename(e *utils.Environment, filename string) (*Config, error) {
+	configs, err := doConfigQuery(e, `WHERE "filename" = ?`, filename)
+	if err != nil {
+		return nil, err
+	}
+	if len(configs) == 0 {
+		return nil, nil
+	}
+	return configs[0], nil
+}
+
 func doConfigQuery(e *utils.Environment, where string, values ...interface{}) ([]*Config, error) {
 	sql := `SELECT "id", "slug", "device", "created", "filename", "compressed", "failed" FROM "config" ` + where
 
