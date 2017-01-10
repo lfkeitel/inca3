@@ -55,12 +55,16 @@ func (w *worker) start() error {
 
 	w.job.Total = len(devices)
 
+	confSaveChan := make(chan *models.Config, 100)
+
+	go w.saveConfig(confSaveChan)
+
 	w.job.Status = models.Running
 	w.startTime = time.Now()
 	w.job.Start = w.startTime
 	go func(d []*models.Device) {
 		w.e.Log.Debug("Worker: Running job")
-		w.run(d)
+		w.run(d, confSaveChan)
 		w.e.Log.Debug("Worker: Job finished")
 		w.done <- true
 	}(devices)
@@ -68,7 +72,17 @@ func (w *worker) start() error {
 	return nil
 }
 
-func (w *worker) run(devices []*models.Device) {
+func (w *worker) saveConfig(configs <-chan *models.Config) {
+	for config := range configs {
+		if err := config.Save(); err != nil {
+			w.e.Log.WithField("Err", err).Error("Failed to save config")
+			continue
+		}
+		w.e.Log.WithField("Config", config.Filename).Info("Config saved successfully")
+	}
+}
+
+func (w *worker) run(devices []*models.Device, configSave chan<- *models.Config) {
 	wg := NewLimitGroup(w.e.Config.Job.MaxConnections)
 	date := time.Now().Format("2006-01-02T15:04:05")
 
@@ -127,11 +141,9 @@ func (w *worker) run(devices []*models.Device) {
 			c.Created = time.Now()
 			c.Compressed = true
 
-			if err := c.Save(); err != nil {
-				w.e.Log.WithField("Err", err).Error("Failed to save config")
-			}
+			configSave <- c
 
-			w.e.Log.WithField("Address", de.Address).Debug("Script finished, config saved")
+			w.e.Log.WithField("Address", de.Address).Debug("Script finished")
 			w.job.finished++
 		}(d, configFile, args)
 
