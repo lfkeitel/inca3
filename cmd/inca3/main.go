@@ -78,13 +78,14 @@ func main() {
 	}
 	e.Log.WithFields(verbose.Fields{
 		"path": e.Config.Database.Path,
-	}).Debug("Loaded database")
+	}).Info("Loaded database")
 
 	e.View, err = utils.NewViewer(e, "public/templates")
 	if err != nil {
 		e.Log.WithField("error", err).Fatal("Error loading frontend templates")
 	}
 
+	e.Log.UserLog(verbose.LogLevelInfo, "Starting server")
 	server.NewServer(e, server.LoadRoutes(e)).Run()
 }
 

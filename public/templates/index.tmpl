@@ -14,5 +14,16 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-md-6 column">
+            <h2>Quick Add Device</h2>
+        </div>
+
+        <div class="col-md-6 column">
+            <h2>Application Logs</h2>
+            <table class="table table-striped" id="logs"></table>
+        </div>
+    </div>
+
     {{template "footer" dict "e" $.e "js" (list "index")}}
 {{end}}

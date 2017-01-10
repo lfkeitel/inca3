@@ -75,5 +75,9 @@
         $.getJSON("api/job/status/" + id).done(ok).fail(fail);
     }
 
+    API.prototype.getUserLogs = function(ok, fail) {
+        $.getJSON("api/logs").done(ok).fail(fail);
+    }
+
     w.API = new API();
 })(window);

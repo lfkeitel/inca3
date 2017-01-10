@@ -57,6 +57,9 @@ func apiGETRoutes(e *utils.Environment) http.Handler {
 	r.GET("/api/profiles", t.ApiGetTypes)
 	r.GET("/api/profiles/:slug", t.ApiGetTypes)
 
+	l := controllers.GetLogController(e)
+	r.GET("/api/logs", l.ApiGetLogs)
+
 	return r
 }
 

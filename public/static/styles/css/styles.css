@@ -61,3 +61,7 @@ code {
 .job-idle {
   color: black;
 }
+
+.controls {
+  margin-bottom: 1em;
+}

@@ -1,6 +1,18 @@
 (function($, w) {
     var jobID = 0;
 
+    var logLevels = [
+        "DEBUG",
+        "INFO",
+        "NOTICE",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+        "ALERT",
+        "EMERGENCY",
+        "FATAL",
+    ];
+
     $('#startArchiveBtn').click(function() {
         var spec = {
             type: "configs",
@@ -53,4 +65,24 @@
             toastr["error"](resp.responseJSON.message);
         });
     }
+
+    function updateUserLogTable(logs) {
+        var table = $('#logs');
+        var header = "<thead><tr><th>Level</th><th>Timestamp</th><th>Message</th></tr></thead>"
+        var html = header + "<tbody>";
+
+        for (var i = 0; i < logs.length; i++) {
+            var log = logs[i];
+            html += "<tr><td>" + logLevels[log.level] + "</td><td>" + formatDate(log.timestamp) + "</td><td>" + log.message + "</td></tr>";
+        }
+
+        html += "</tbody>";
+        table.html(html);
+    }
+
+    API.getUserLogs(function(data) {
+        updateUserLogTable(data.data);
+    }, function() {
+        console.log("Error getting logs")
+    });
 })(jQuery, window);
