@@ -57,29 +57,52 @@ func (w *worker) start() error {
 
 	confSaveChan := make(chan *models.Config, 100)
 
-	go w.saveConfig(confSaveChan)
+	savesFinished := make(chan bool, 1)
+	go w.saveConfig(confSaveChan, savesFinished)
 
 	w.job.Status = models.Running
 	w.startTime = time.Now()
 	w.job.Start = w.startTime
 	go func(d []*models.Device) {
-		w.e.Log.Debug("Worker: Running job")
+		w.e.Log.Info("Worker: Running job")
 		w.run(d, confSaveChan)
-		w.e.Log.Debug("Worker: Job finished")
+
+		w.e.Log.Debug("Waiting on configs to save")
+		confSaveChan <- &models.Config{ID: -5}
+		<-savesFinished
+		w.e.Log.Debug("All configs saved")
+
+		w.job.Status = models.Finished
+		w.job.End = time.Now()
+		if err := w.job.Save(); err != nil {
+			select {
+			case w.errors <- err:
+			default:
+			}
+			w.e.Log.WithField("Err", err).Error("Failed to save job")
+		}
+
+		w.e.Log.Info("Worker: Job finished")
+		w.e.Log.UserLog(verbose.LogLevelInfo, "Job finished in %s", time.Since(w.startTime).String())
 		w.done <- true
 	}(devices)
 
 	return nil
 }
 
-func (w *worker) saveConfig(configs <-chan *models.Config) {
+func (w *worker) saveConfig(configs <-chan *models.Config, finished chan<- bool) {
 	for config := range configs {
+		if config.ID == -5 { // Used to signal stop of goroutine
+			break
+		}
+
 		if err := config.Save(); err != nil {
 			w.e.Log.WithField("Err", err).Error("Failed to save config")
 			continue
 		}
 		w.e.Log.WithField("Config", config.Filename).Info("Config saved successfully")
 	}
+	finished <- true
 }
 
 func (w *worker) run(devices []*models.Device, configSave chan<- *models.Config) {
@@ -151,15 +174,6 @@ func (w *worker) run(devices []*models.Device, configSave chan<- *models.Config)
 	}
 
 	wg.WaitAll()
-	w.job.Status = models.Finished
-	w.job.End = time.Now()
-	if err := w.job.Save(); err != nil {
-		select {
-		case w.errors <- err:
-		default:
-		}
-		w.e.Log.WithField("Err", err).Error("Failed to save job")
-	}
 }
 
 func (w *worker) getArguments(device *models.Device, filename string) []string {

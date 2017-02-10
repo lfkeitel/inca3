@@ -2,10 +2,8 @@ package jobs
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
-
-	"strconv"
 
 	"github.com/lfkeitel/inca3/src/models"
 	"github.com/lfkeitel/inca3/src/utils"
@@ -29,6 +27,7 @@ type job struct {
 
 type JobStatus struct {
 	Started   time.Time `json:"started"`
+	Finished  time.Time `json:"finished"`
 	Total     int       `json:"total"`
 	Completed int       `json:"completed"`
 }
@@ -36,11 +35,13 @@ type JobStatus struct {
 func (j *JobStatus) MarshalJSON() ([]byte, error) {
 	type Alias JobStatus
 	return json.Marshal(&struct {
-		Started int64 `json:"started"`
+		Started  int64 `json:"started"`
+		Finished int64 `json:"finished"`
 		*Alias
 	}{
-		Started: j.Started.Unix(),
-		Alias:   (*Alias)(j),
+		Started:  j.Started.Unix(),
+		Finished: j.Finished.Unix(),
+		Alias:    (*Alias)(j),
 	})
 }
 
@@ -91,12 +92,13 @@ func StopJob(id int) error {
 func StatusJob(id int) (*JobStatus, error) {
 	j, ok := getJobManager(nil).jobs[id]
 	if !ok {
-		return nil, errors.New("No job with ID " + strconv.Itoa(id))
+		return nil, fmt.Errorf("No job with ID %d", id)
 	}
 
 	return &JobStatus{
 		Started:   j.Start,
 		Total:     j.Total,
 		Completed: j.finished,
+		Finished:  j.End,
 	}, nil
 }

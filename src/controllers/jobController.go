@@ -46,24 +46,25 @@ func (j *JobController) ApiJobStatus(w http.ResponseWriter, r *http.Request, p h
 		return
 	}
 
-	job, err := models.GetJobByID(j.e, id)
-	if err != nil {
-		j.e.Log.WithField("Err", err).Debug("Error getting job from database")
-		resp.Message = "Error getting job status"
-		resp.WriteResponse(w, http.StatusInternalServerError)
-		return
-	}
-
-	if job == nil {
-		resp.Message = "Job does not exist"
-		resp.WriteResponse(w, http.StatusNotFound)
-		return
-	}
-
 	status, err := jobs.StatusJob(id)
 	if err != nil {
+		job, err := models.GetJobByID(j.e, id)
+		if err != nil {
+			j.e.Log.WithField("Err", err).Debug("Error getting job from database")
+			resp.Message = "Error getting job status"
+			resp.WriteResponse(w, http.StatusInternalServerError)
+			return
+		}
+
+		if job == nil {
+			resp.Message = "Job does not exist"
+			resp.WriteResponse(w, http.StatusNotFound)
+			return
+		}
+
 		status = &jobs.JobStatus{
 			Started:   job.Start,
+			Finished:  job.End,
 			Total:     job.Total,
 			Completed: job.Total,
 		}

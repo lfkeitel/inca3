@@ -49,7 +49,7 @@
             progress.prop('aria-valuenow', data.data.completed);
             progress.css('width', ((data.data.completed / data.data.total) * 100) + '%')
 
-            if (data.data.completed < data.data.total) {
+            if (data.data.finished <= 0) {
                 setTimeout(startStatusChecker, 3000);
                 return
             }
