@@ -40,8 +40,11 @@ code {
 }
 
 #edit-form {
-  display: none;
   margin-top: 8px;
+}
+
+.start-hidden {
+  display: none;
 }
 
 .alert-fixed {

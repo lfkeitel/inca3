@@ -1,5 +1,5 @@
 {{define "partial-dev-info-form"}}
-<form id="edit-form">
+<form id="edit-form" class="{{if ne $.hidden "false"}}start-hidden{{end}}">
     <div class="form-group">
         <label for="device-name">Name</label>
         <input type="text" class="form-control" id="device-name">
@@ -15,7 +15,7 @@
 
     <div class="form-group">
         <button class="btn btn-success" type="button" id="save-create-btn">
-            {{if eq . "add"}}Create{{else}}Save{{end}}
+            {{if eq $.mode "add"}}Create{{else}}Save{{end}}
         </button>
         <button class="btn btn-danger" type="button" id="cancel-edit-btn">Cancel</button>
     </div>

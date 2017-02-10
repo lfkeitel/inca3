@@ -85,4 +85,11 @@
     }, function() {
         console.log("Error getting logs")
     });
+
+    deviceForm.init({
+        save: function() {
+            toastr["success"]("Device Saved");
+            deviceForm.clear();
+        }
+    });
 })(jQuery, window);

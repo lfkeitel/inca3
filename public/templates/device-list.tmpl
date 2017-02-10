@@ -7,11 +7,11 @@
                 <button class="btn btn-primary" type="button" id="add-device-btn">Add</button>
             </div>
 
-            {{template "partial-dev-info-form" "add"}}
+            {{template "partial-dev-info-form" dict "mode" "add" "hidden" ""}}
 
             {{template "partial-device-list" .devices}}
         </div>
     </div>
 
-    {{template "footer" dict "e" $.e "js" (list "device-list")}}
+    {{template "footer" dict "e" $.e "js" (list "device-edit-form" "device-list")}}
 {{end}}

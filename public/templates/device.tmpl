@@ -11,7 +11,7 @@
                 <button id="delete-device-btn" class="btn btn-danger">Delete</button>
             </div>
 
-            {{template "partial-dev-info-form" "edit"}}
+            {{template "partial-dev-info-form" dict "mode" "edit" "hidden" ""}}
 
             {{template "partial-config-list" dict "configs" $.configs "device" $.device}}
         </div>
@@ -19,5 +19,5 @@
 
     <script type="application/json" id="device-json">{{.device}}</script>
 
-    {{template "footer" dict "e" $.e "js" (list "device")}}
+    {{template "footer" dict "e" $.e "js" (list "device-edit-form" "device")}}
 {{end}}

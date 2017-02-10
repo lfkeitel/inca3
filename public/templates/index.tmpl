@@ -17,6 +17,8 @@
     <div class="row">
         <div class="col-md-6 column">
             <h2>Quick Add Device</h2>
+
+            {{template "partial-dev-info-form" dict "mode" "add" "hidden" "false"}}
         </div>
 
         <div class="col-md-6 column">
@@ -25,5 +27,5 @@
         </div>
     </div>
 
-    {{template "footer" dict "e" $.e "js" (list "index")}}
+    {{template "footer" dict "e" $.e "js" (list "device-edit-form" "index")}}
 {{end}}
