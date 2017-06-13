@@ -55,6 +55,16 @@ toastr.options = {
 function bindConfigClickEvents() {
     $('.clickable-row').click(function() {
         window.location = $(this).data('href');
+        return true;
+    });
+
+    $('.clickable-row').mouseup(function(e) {
+        if (e.which !== 2) {
+            return false;
+        }
+
+        window.open($(this).data('href'), '_blank');
+        return true;
     });
 }
 
